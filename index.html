@@ -250,6 +250,131 @@ function AgentView() {
   );
 }
 
+
+// ── EMAIL DRAFTER ──────────────────────────────────────────────────
+function EmailDrafter({client, onClose}) {
+  const [status, setStatus] = React.useState("idle"); // idle, loading, ready, copied
+  const [draft, setDraft] = React.useState(null);
+  const [error, setError] = React.useState(null);
+
+  const generateDraft = async () => {
+    setStatus("loading");
+    setError(null);
+    try {
+      const res = await fetch("/.netlify/functions/draft-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setDraft(data);
+      setStatus("ready");
+    } catch(e) {
+      setError("Couldn't generate draft — " + e.message);
+      setStatus("idle");
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setStatus("copied");
+    setTimeout(() => setStatus("ready"), 2000);
+  };
+
+  const openEmail = () => {
+    const subject = encodeURIComponent(draft.subject);
+    const body = encodeURIComponent(draft.body);
+    window.open(`mailto:${client.primary_email}?subject=${subject}&body=${body}`);
+  };
+
+  return (
+    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{background:"#1a1714",border:"1px solid rgba(201,168,76,0.3)",borderRadius:8,width:"100%",maxWidth:620,maxHeight:"85vh",overflow:"auto"}}>
+        
+        {/* Header */}
+        <div style={{padding:"20px 24px",borderBottom:"1px solid rgba(201,168,76,0.15)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:10,letterSpacing:"0.35em",color:gold,textTransform:"uppercase",marginBottom:4}}>AI Email Draft</div>
+            <div style={{fontSize:16,color:"#e8dcc8",fontFamily:"'Cormorant Garamond',serif"}}>
+              {client.first_name} {client.last_name} — {client.vehicle_of_interest||"Vehicle Enquiry"}
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#7a6d5a",fontSize:18,cursor:"pointer",padding:"4px 8px"}}>✕</button>
+        </div>
+
+        <div style={{padding:24}}>
+          {status === "idle" && !draft && (
+            <div style={{textAlign:"center",padding:"32px 0"}}>
+              <div style={{fontSize:14,color:"#8a7d6a",marginBottom:24,lineHeight:1.7}}>
+                Jessica will draft a personalised first response email for {client.first_name} based on their vehicle interest and lead details. Review it before sending.
+              </div>
+              <button onClick={generateDraft} style={{padding:"12px 32px",background:"rgba(201,168,76,0.15)",border:"1px solid rgba(201,168,76,0.5)",borderRadius:4,color:gold,fontSize:12,letterSpacing:"0.25em",textTransform:"uppercase",cursor:"pointer"}}>
+                ✦ Generate Draft
+              </button>
+            </div>
+          )}
+
+          {status === "loading" && (
+            <div style={{textAlign:"center",padding:"40px 0"}}>
+              <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:16}}>
+                {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:gold,animation:`fadeUp 1.2s ease-in-out ${i*0.2}s infinite`,opacity:0.6}} />)}
+              </div>
+              <div style={{fontSize:13,color:"#8a7d6a"}}>Jessica is drafting your email…</div>
+            </div>
+          )}
+
+          {error && (
+            <div style={{padding:"12px 16px",background:"rgba(252,165,165,0.08)",border:"1px solid rgba(252,165,165,0.2)",borderRadius:4,color:"#fca5a5",fontSize:13,marginBottom:16}}>
+              {error}
+            </div>
+          )}
+
+          {draft && (status === "ready" || status === "copied") && (
+            <div>
+              {/* Subject */}
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:10,letterSpacing:"0.3em",color:gold,textTransform:"uppercase",marginBottom:8}}>Subject Line</div>
+                <div style={{padding:"12px 16px",background:"#0d0c0a",border:"1px solid rgba(201,168,76,0.2)",borderRadius:4,fontSize:14,color:"#e8dcc8",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+                  <span>{draft.subject}</span>
+                  <button onClick={()=>copyToClipboard(draft.subject)} style={{background:"none",border:"none",color:"#7a6d5a",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",letterSpacing:"0.1em"}}>COPY</button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div style={{marginBottom:24}}>
+                <div style={{fontSize:10,letterSpacing:"0.3em",color:gold,textTransform:"uppercase",marginBottom:8}}>Email Body</div>
+                <textarea
+                  value={draft.body}
+                  onChange={e=>setDraft({...draft,body:e.target.value})}
+                  rows={10}
+                  style={{width:"100%",padding:"14px 16px",background:"#0d0c0a",border:"1px solid rgba(201,168,76,0.2)",borderRadius:4,color:"#e8dcc8",fontSize:14,lineHeight:1.8,resize:"vertical",fontFamily:"'Jost',sans-serif",fontWeight:300}}
+                />
+                <div style={{fontSize:11,color:"#554f47",marginTop:6}}>You can edit the draft above before sending.</div>
+              </div>
+
+              {/* Actions */}
+              <div style={{display:"flex",gap:10,justifyContent:"flex-end",flexWrap:"wrap"}}>
+                <button onClick={generateDraft} style={{padding:"10px 20px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:4,color:"#7a6d5a",fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",cursor:"pointer"}}>
+                  ↺ Regenerate
+                </button>
+                <button onClick={()=>copyToClipboard(draft.body)} style={{padding:"10px 20px",background:"transparent",border:"1px solid rgba(201,168,76,0.3)",borderRadius:4,color:gold,fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",cursor:"pointer"}}>
+                  {status==="copied" ? "✓ Copied!" : "Copy Body"}
+                </button>
+                {client.primary_email && (
+                  <button onClick={openEmail} style={{padding:"10px 24px",background:"rgba(201,168,76,0.15)",border:"1px solid rgba(201,168,76,0.5)",borderRadius:4,color:gold,fontSize:11,letterSpacing:"0.2em",textTransform:"uppercase",cursor:"pointer"}}>
+                    Open in Mail ↗
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── SETUP SCREEN ───────────────────────────────────────────────────
 function Setup() {
   return (
@@ -390,6 +515,7 @@ function Card({client, onClick}) {
 // ── CLIENT DETAIL ──────────────────────────────────────────────────
 function Detail({client, onEdit, onBack, onDelete}) {
   const [confirm, setConfirm] = useState(false);
+  const [showEmail, setShowEmail] = React.useState(false);
   function Row({label, value}) {
     if (!value) return null;
     return (
@@ -401,6 +527,7 @@ function Detail({client, onEdit, onBack, onDelete}) {
   }
   return (
     <div style={{maxWidth:680,paddingBottom:60}}>
+      {showEmail && <EmailDrafter client={client} onClose={()=>setShowEmail(false)} />}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:32}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:"#6a5d4a",fontSize:12,letterSpacing:"0.2em",textTransform:"uppercase",padding:0,cursor:"pointer"}}>← Back</button>
         <div style={{display:"flex",gap:10}}>
