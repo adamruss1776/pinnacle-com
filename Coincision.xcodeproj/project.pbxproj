@@ -1,0 +1,417 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA000001 /* CoincisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001 /* CoincisionApp.swift */; };
+		AA000002 /* CoinConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* CoinConstants.swift */; };
+		AA000003 /* AnimationTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* AnimationTokens.swift */; };
+		AA000004 /* ColorPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004 /* ColorPalette.swift */; };
+		AA000005 /* FlipEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005 /* FlipEntry.swift */; };
+		AA000006 /* HapticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006 /* HapticsManager.swift */; };
+		AA000007 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007 /* AudioManager.swift */; };
+		AA000008 /* DustParticle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008 /* DustParticle.swift */; };
+		AA000009 /* WaitingCoin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009 /* WaitingCoin.swift */; };
+		AA000010 /* SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000010 /* SplashScreen.swift */; };
+		AA000011 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* HomeScreen.swift */; };
+		AA000012 /* FlipScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* FlipScreen.swift */; };
+		AA000013 /* JournalScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* JournalScreen.swift */; };
+		AA000014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000014 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AB000001 /* CoincisionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoincisionApp.swift; sourceTree = "<group>"; };
+		AB000002 /* CoinConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinConstants.swift; sourceTree = "<group>"; };
+		AB000003 /* AnimationTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationTokens.swift; sourceTree = "<group>"; };
+		AB000004 /* ColorPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPalette.swift; sourceTree = "<group>"; };
+		AB000005 /* FlipEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipEntry.swift; sourceTree = "<group>"; };
+		AB000006 /* HapticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticsManager.swift; sourceTree = "<group>"; };
+		AB000007 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		AB000008 /* DustParticle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DustParticle.swift; sourceTree = "<group>"; };
+		AB000009 /* WaitingCoin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingCoin.swift; sourceTree = "<group>"; };
+		AB000010 /* SplashScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreen.swift; sourceTree = "<group>"; };
+		AB000011 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
+		AB000012 /* FlipScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipScreen.swift; sourceTree = "<group>"; };
+		AB000013 /* JournalScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalScreen.swift; sourceTree = "<group>"; };
+		AB000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB000099 /* Coincision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Coincision.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AC000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AG000001 /* Coincision */ = {
+			isa = PBXGroup;
+			children = (
+				AB000001 /* CoincisionApp.swift */,
+				AG000002 /* Constants */,
+				AG000003 /* Models */,
+				AG000004 /* Managers */,
+				AG000005 /* Components */,
+				AG000006 /* Views */,
+				AB000014 /* Assets.xcassets */,
+			);
+			path = Coincision;
+			sourceTree = "<group>";
+		};
+		AG000002 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				AB000002 /* CoinConstants.swift */,
+				AB000003 /* AnimationTokens.swift */,
+				AB000004 /* ColorPalette.swift */,
+			);
+			path = Constants;
+			sourceTree = "<group>";
+		};
+		AG000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AB000005 /* FlipEntry.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AG000004 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				AB000006 /* HapticsManager.swift */,
+				AB000007 /* AudioManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		AG000005 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AB000008 /* DustParticle.swift */,
+				AB000009 /* WaitingCoin.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		AG000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AB000010 /* SplashScreen.swift */,
+				AB000011 /* HomeScreen.swift */,
+				AB000012 /* FlipScreen.swift */,
+				AB000013 /* JournalScreen.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AG000099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AB000099 /* Coincision.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AG000000 /* root */ = {
+			isa = PBXGroup;
+			children = (
+				AG000001 /* Coincision */,
+				AG000099 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AT000001 /* Coincision */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = XC000002 /* Build configuration list for PBXNativeTarget "Coincision" */;
+			buildPhases = (
+				AP000001 /* Sources */,
+				AC000001 /* Frameworks */,
+				AR000001 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = Coincision;
+			productName = Coincision;
+			productReference = AB000099 /* Coincision.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AJ000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AT000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = XC000001 /* Build configuration list for PBXProject "Coincision" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AG000000;
+			productRefGroup = AG000099 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AT000001 /* Coincision */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AR000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000014 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AP000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000001 /* CoincisionApp.swift in Sources */,
+				AA000002 /* CoinConstants.swift in Sources */,
+				AA000003 /* AnimationTokens.swift in Sources */,
+				AA000004 /* ColorPalette.swift in Sources */,
+				AA000005 /* FlipEntry.swift in Sources */,
+				AA000006 /* HapticsManager.swift in Sources */,
+				AA000007 /* AudioManager.swift in Sources */,
+				AA000008 /* DustParticle.swift in Sources */,
+				AA000009 /* WaitingCoin.swift in Sources */,
+				AA000010 /* SplashScreen.swift in Sources */,
+				AA000011 /* HomeScreen.swift in Sources */,
+				AA000012 /* FlipScreen.swift in Sources */,
+				AA000013 /* JournalScreen.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		XC000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_LOOPS = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		XC000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_LOOPS = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		XC000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.coincision.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		XC000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.coincision.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		XC000001 /* Build configuration list for PBXProject "Coincision" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				XC000003 /* Debug */,
+				XC000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		XC000002 /* Build configuration list for PBXNativeTarget "Coincision" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				XC000005 /* Debug */,
+				XC000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = AJ000001 /* Project object */;
+}
