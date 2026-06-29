@@ -64,8 +64,10 @@ interface DataContextValue {
   payPlan: PayPlan;
   isLoading: boolean;
   addDeal: (deal: Omit<Deal, "id" | "createdAt" | "commission" | "isCapped">) => void;
+  updateDeal: (id: string, deal: Omit<Deal, "id" | "createdAt" | "commission" | "isCapped">) => void;
   deleteDeal: (id: string) => void;
   addSpiff: (spiff: Omit<Spiff, "id" | "createdAt">) => void;
+  updateSpiff: (id: string, spiff: Omit<Spiff, "id" | "createdAt">) => void;
   deleteSpiff: (id: string) => void;
   updatePayPlan: (plan: PayPlan) => void;
   mtdCommission: number;
@@ -133,6 +135,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [payPlan]
   );
 
+  const updateDeal = useCallback(
+    (id: string, dealData: Omit<Deal, "id" | "createdAt" | "commission" | "isCapped">) => {
+      const result = calcCommission(
+        dealData.type,
+        dealData.frontGross,
+        dealData.backGross,
+        dealData.split,
+        payPlan
+      );
+      setDeals((prev) => {
+        const updated = prev.map((d) =>
+          d.id === id
+            ? { ...d, ...dealData, commission: result.commission, isCapped: result.isCapped }
+            : d
+        );
+        AsyncStorage.setItem(DEALS_KEY, JSON.stringify(updated));
+        return updated;
+      });
+    },
+    [payPlan]
+  );
+
   const deleteDeal = useCallback((id: string) => {
     setDeals((prev) => {
       const updated = prev.filter((d) => d.id !== id);
@@ -156,6 +180,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     },
     []
   );
+
+  const updateSpiff = useCallback((id: string, spiffData: Omit<Spiff, "id" | "createdAt">) => {
+    setSpiffs((prev) => {
+      const updated = prev.map((s) =>
+        s.id === id ? { ...s, ...spiffData } : s
+      );
+      AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   const deleteSpiff = useCallback((id: string) => {
     setSpiffs((prev) => {
@@ -230,8 +264,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         payPlan,
         isLoading,
         addDeal,
+        updateDeal,
         deleteDeal,
         addSpiff,
+        updateSpiff,
         deleteSpiff,
         updatePayPlan,
         mtdCommission,

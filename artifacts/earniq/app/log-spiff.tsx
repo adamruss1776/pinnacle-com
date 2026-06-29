@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -20,12 +20,19 @@ import { useColors } from "@/hooks/useColors";
 export default function LogSpiffScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { addSpiff } = useData();
+  const { addSpiff, updateSpiff, spiffs } = useData();
+  const params = useLocalSearchParams<{ editId?: string }>();
+
+  const editId = params.editId;
+  const existingSpiff = editId ? spiffs.find((s) => s.id === editId) : undefined;
+  const isEdit = !!existingSpiff;
 
   const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(existingSpiff?.date ?? today);
+  const [description, setDescription] = useState(existingSpiff?.description ?? "");
+  const [amount, setAmount] = useState(
+    existingSpiff != null ? String(existingSpiff.amount) : ""
+  );
 
   function handleSave() {
     const amt = parseFloat(amount);
@@ -34,11 +41,16 @@ export default function LogSpiffScreen() {
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    addSpiff({
+    const spiffData = {
       date,
       description: description.trim(),
       amount: amt,
-    });
+    };
+    if (isEdit && editId) {
+      updateSpiff(editId, spiffData);
+    } else {
+      addSpiff(spiffData);
+    }
     router.back();
   }
 
@@ -63,14 +75,14 @@ export default function LogSpiffScreen() {
           </Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Log Spiff
+          {isEdit ? "Edit Spiff" : "Log Spiff"}
         </Text>
         <TouchableOpacity
           style={[styles.saveBtn, { backgroundColor: colors.amber }]}
           onPress={handleSave}
         >
           <Text style={[styles.saveBtnText, { color: "#080808", fontFamily: "Inter_600SemiBold" }]}>
-            Save
+            {isEdit ? "Update" : "Save"}
           </Text>
         </TouchableOpacity>
       </View>

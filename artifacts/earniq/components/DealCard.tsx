@@ -9,14 +9,19 @@ import { formatCurrency, formatDate } from "@/utils/commission";
 interface DealCardProps {
   deal: Deal;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
   compact?: boolean;
 }
 
-export function DealCard({ deal, onDelete, compact = false }: DealCardProps) {
+export function DealCard({ deal, onDelete, onEdit, compact = false }: DealCardProps) {
   const colors = useColors();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      onPress={() => onEdit?.(deal.id)}
+      activeOpacity={onEdit ? 0.7 : 1}
+    >
       <View style={styles.row}>
         <View style={styles.info}>
           <View style={styles.titleRow}>
@@ -69,18 +74,29 @@ export function DealCard({ deal, onDelete, compact = false }: DealCardProps) {
           <Text style={[styles.commission, { color: colors.green, fontFamily: "Inter_700Bold" }]}>
             {formatCurrency(deal.commission)}
           </Text>
-          {onDelete && (
-            <TouchableOpacity
-              onPress={() => onDelete(deal.id)}
-              style={styles.deleteBtn}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="trash-outline" size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          )}
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity
+                onPress={() => onEdit(deal.id)}
+                style={styles.actionBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="pencil-outline" size={15} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity
+                onPress={() => onDelete(deal.id)}
+                style={styles.actionBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="trash-outline" size={15} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -140,7 +156,11 @@ const styles = StyleSheet.create({
   commission: {
     fontSize: 18,
   },
-  deleteBtn: {
+  actions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  actionBtn: {
     padding: 2,
   },
 });

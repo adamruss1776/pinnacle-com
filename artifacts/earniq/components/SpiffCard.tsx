@@ -9,13 +9,18 @@ import { formatCurrency, formatDate } from "@/utils/commission";
 interface SpiffCardProps {
   spiff: Spiff;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
 }
 
-export function SpiffCard({ spiff, onDelete }: SpiffCardProps) {
+export function SpiffCard({ spiff, onDelete, onEdit }: SpiffCardProps) {
   const colors = useColors();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      onPress={() => onEdit?.(spiff.id)}
+      activeOpacity={onEdit ? 0.7 : 1}
+    >
       <View style={styles.row}>
         <View style={styles.left}>
           <View style={[styles.dot, { backgroundColor: colors.amber }]} />
@@ -35,17 +40,27 @@ export function SpiffCard({ spiff, onDelete }: SpiffCardProps) {
           <Text style={[styles.amount, { color: colors.amber, fontFamily: "Inter_700Bold" }]}>
             {formatCurrency(spiff.amount)}
           </Text>
-          {onDelete && (
-            <TouchableOpacity
-              onPress={() => onDelete(spiff.id)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="trash-outline" size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          )}
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity
+                onPress={() => onEdit(spiff.id)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="pencil-outline" size={15} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity
+                onPress={() => onDelete(spiff.id)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="trash-outline" size={15} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -88,5 +103,9 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 18,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 8,
   },
 });

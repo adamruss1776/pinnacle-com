@@ -43,6 +43,14 @@ export default function DealLogScreen() {
   const totalDealComm = filteredDeals.reduce((s, d) => s + d.commission, 0);
   const totalSpiffs = filteredSpiffs.reduce((s, sp) => s + sp.amount, 0);
 
+  function handleEditDeal(id: string) {
+    router.push({ pathname: "/log-deal", params: { editId: id } });
+  }
+
+  function handleEditSpiff(id: string) {
+    router.push({ pathname: "/log-spiff", params: { editId: id } });
+  }
+
   function handleDeleteDeal(id: string) {
     Alert.alert("Delete Deal", "Are you sure you want to delete this deal?", [
       { text: "Cancel", style: "cancel" },
@@ -216,7 +224,7 @@ export default function DealLogScreen() {
           </View>
         ) : (
           filteredDeals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} onDelete={handleDeleteDeal} />
+            <DealCard key={deal.id} deal={deal} onDelete={handleDeleteDeal} onEdit={handleEditDeal} />
           ))
         )}
 
@@ -233,7 +241,7 @@ export default function DealLogScreen() {
           </View>
         ) : (
           filteredSpiffs.map((spiff) => (
-            <SpiffCard key={spiff.id} spiff={spiff} onDelete={handleDeleteSpiff} />
+            <SpiffCard key={spiff.id} spiff={spiff} onDelete={handleDeleteSpiff} onEdit={handleEditSpiff} />
           ))
         )}
       </ScrollView>

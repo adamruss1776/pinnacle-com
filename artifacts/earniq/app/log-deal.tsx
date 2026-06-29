@@ -7,7 +7,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -30,8 +29,9 @@ const SPLITS = [
 export default function LogDealScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { addDeal, payPlan } = useData();
+  const { addDeal, updateDeal, payPlan, deals } = useData();
   const params = useLocalSearchParams<{
+    editId?: string;
     prefillDate?: string;
     prefillVehicle?: string;
     prefillFront?: string;
@@ -39,19 +39,31 @@ export default function LogDealScreen() {
     prefillType?: string;
   }>();
 
+  const editId = params.editId;
+  const existingDeal = editId ? deals.find((d) => d.id === editId) : undefined;
+  const isEdit = !!existingDeal;
+
   const today = new Date().toISOString().split("T")[0];
 
-  const [date, setDate] = useState(params.prefillDate ?? today);
-  const [vehicleName, setVehicleName] = useState(params.prefillVehicle ?? "");
-  const [stockNumber, setStockNumber] = useState("");
-  const [type, setType] = useState<"new" | "used">(
-    (params.prefillType as "new" | "used") ?? "new"
+  const [date, setDate] = useState(
+    existingDeal?.date ?? params.prefillDate ?? today
   );
-  const [frontGross, setFrontGross] = useState(params.prefillFront ?? "");
-  const [backGross, setBackGross] = useState(params.prefillBack ?? "");
-  const [split, setSplit] = useState(1);
-  const [partnerName, setPartnerName] = useState("");
-  const [notes, setNotes] = useState("");
+  const [vehicleName, setVehicleName] = useState(
+    existingDeal?.vehicleName ?? params.prefillVehicle ?? ""
+  );
+  const [stockNumber, setStockNumber] = useState(existingDeal?.stockNumber ?? "");
+  const [type, setType] = useState<"new" | "used">(
+    existingDeal?.type ?? (params.prefillType as "new" | "used") ?? "new"
+  );
+  const [frontGross, setFrontGross] = useState(
+    existingDeal != null ? String(existingDeal.frontGross) : (params.prefillFront ?? "")
+  );
+  const [backGross, setBackGross] = useState(
+    existingDeal != null ? String(existingDeal.backGross) : (params.prefillBack ?? "")
+  );
+  const [split, setSplit] = useState(existingDeal?.split ?? 1);
+  const [partnerName, setPartnerName] = useState(existingDeal?.partnerName ?? "");
+  const [notes, setNotes] = useState(existingDeal?.notes ?? "");
 
   const front = parseFloat(frontGross) || 0;
   const back = parseFloat(backGross) || 0;
@@ -67,7 +79,7 @@ export default function LogDealScreen() {
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    addDeal({
+    const dealData = {
       date,
       vehicleName: vehicleName.trim(),
       stockNumber: stockNumber.trim(),
@@ -77,7 +89,12 @@ export default function LogDealScreen() {
       split,
       partnerName: partnerName.trim(),
       notes: notes.trim(),
-    });
+    };
+    if (isEdit && editId) {
+      updateDeal(editId, dealData);
+    } else {
+      addDeal(dealData);
+    }
     router.back();
   }
 
@@ -101,14 +118,14 @@ export default function LogDealScreen() {
           </Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Log Deal
+          {isEdit ? "Edit Deal" : "Log Deal"}
         </Text>
         <TouchableOpacity
           style={[styles.saveBtn, { backgroundColor: colors.green }]}
           onPress={handleSave}
         >
           <Text style={[styles.saveBtnText, { color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Save
+            {isEdit ? "Update" : "Save"}
           </Text>
         </TouchableOpacity>
       </View>
