@@ -1,0 +1,37 @@
+Build a mobile app called EarnIQ — a sales commission tracker for automotive dealership salespeople. Use React Native with Expo so it runs on both iOS and Android.
+3 screens with a bottom tab navigator:
+
+Screen 1 — Earnings (Home)
+
+Large MTD (month-to-date) commission total in green at the top
+YTD total and average commission per deal in a 2-column stat row below
+List of 5 most recent deals
+"+ Deal" and "+ Spiff" buttons in the header
+"Import Deal Sheet" button (photo or PDF upload using Expo ImagePicker / DocumentPicker)
+
+Screen 2 — Deal Log
+
+Filter tabs: This Month / This Year / All Time
+Scrollable list of all logged deals showing: vehicle name, date, New/Used badge, commission earned, ⚡ Capped indicator if front end hit the cap, split % if applicable
+Spiffs & Bonuses section below the deal list
+Import and + Deal buttons
+
+Screen 3 — Pay Plan (Settings)
+
+Sliders for: New front end % (default 15%), New front end cap (default $6,000), Used front end % (default 20%), Used front end cap (default $7,500), Back end % (default 10%)
+Toggle to enforce/disable caps
+Built-in deal calculator at the bottom — user enters front and back gross, selects New or Used, and sees their commission calculated live
+
+
+Commission formula:
+
+New car: min(frontGross × newFrontPct%, newFrontCap) + backGross × backPct%
+Used car: min(frontGross × usedFrontPct%, usedFrontCap) + backGross × backPct%
+Split deals: multiply final commission by split percentage (50%, 60%, 70%, or 100%)
+
+Log Deal form fields: Date, Vehicle name, Stock #, New/Used toggle, Front Gross (),BackGross(), Back Gross (
+),BackGross(), Split options (None / 70% / 60% / 50%), Partner name (if split), Notes. Show a live commission preview card at the bottom of the form as the user types.
+Log Spiff form fields: Date, Description, Amount ($)
+Import flow: User taps Import → chooses Camera/Gallery (photo) or PDF from Files → OCR the image using expo-camera or react-native-text-recognition, or extract text from PDF → pre-populate the Log Deal form with extracted fields (date, vehicle, front gross, back gross, new/used) → user reviews and saves.
+Data persistence: Use AsyncStorage to save all deals, spiffs, and pay plan settings locally on the device.
+Design: Dark theme. Background #080808, surface cards #111111, accent color green #22c55e for all commission numbers and active states, amber #f59e0b for spiffs and Used vehicle badges, blue #60a5fa for New vehicle badges. Font: Inter or System default. Clean, minimal, fintech-style UI. No clutter.
