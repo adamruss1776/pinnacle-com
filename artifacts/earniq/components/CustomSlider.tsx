@@ -27,15 +27,14 @@ export function CustomSlider({
 }: CustomSliderProps) {
   const colors = useColors();
   const [trackWidth, setTrackWidth] = useState(0);
-  const trackX = useRef(0);
+  const trackWidthRef = useRef(0);
 
   const clamp = (v: number) => Math.max(min, Math.min(max, v));
 
-  const valueToPercent = (v: number) => ((clamp(v) - min) / (max - min)) * 100;
-
-  const pxToValue = (px: number) => {
-    if (trackWidth === 0) return value;
-    const ratio = Math.max(0, Math.min(1, px / trackWidth));
+  const pxToValue = (locationX: number) => {
+    const width = trackWidthRef.current;
+    if (width === 0) return value;
+    const ratio = Math.max(0, Math.min(1, locationX / width));
     const raw = min + ratio * (max - min);
     if (step > 0) {
       return clamp(Math.round(raw / step) * step);
@@ -48,49 +47,29 @@ export function CustomSlider({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
-        const x = e.nativeEvent.locationX;
-        onChange(pxToValue(x));
+        onChange(pxToValue(e.nativeEvent.locationX));
       },
       onPanResponderMove: (e) => {
-        const x = e.nativeEvent.locationX - trackX.current + e.nativeEvent.locationX;
-        const absX = e.nativeEvent.pageX - trackX.current;
-        onChange(pxToValue(Math.max(0, absX)));
+        onChange(pxToValue(e.nativeEvent.locationX));
       },
       onPanResponderRelease: () => {},
     })
   ).current;
 
-  const simplePan = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (e) => {
-      const absX = e.nativeEvent.pageX - trackX.current;
-      onChange(pxToValue(Math.max(0, absX)));
-    },
-    onPanResponderMove: (e) => {
-      const absX = e.nativeEvent.pageX - trackX.current;
-      onChange(pxToValue(Math.max(0, absX)));
-    },
-  });
-
-  const percent = valueToPercent(value);
+  const percent = ((clamp(value) - min) / (max - min)) * 100;
 
   return (
     <View style={styles.wrapper}>
       <View
         style={styles.trackContainer}
         onLayout={(e: LayoutChangeEvent) => {
-          setTrackWidth(e.nativeEvent.layout.width);
-          e.nativeEvent.layout.x && (trackX.current = e.nativeEvent.layout.x);
+          const w = e.nativeEvent.layout.width;
+          setTrackWidth(w);
+          trackWidthRef.current = w;
         }}
-        {...simplePan.panHandlers}
+        {...panResponder.panHandlers}
       >
-        <View
-          style={[
-            styles.track,
-            { backgroundColor: colors.border },
-          ]}
-        >
+        <View style={[styles.track, { backgroundColor: colors.border }]}>
           <View
             style={[
               styles.fill,
@@ -109,7 +88,12 @@ export function CustomSlider({
           ]}
         />
       </View>
-      <Text style={[styles.valueLabel, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
+      <Text
+        style={[
+          styles.valueLabel,
+          { color: colors.green, fontFamily: "Inter_600SemiBold" },
+        ]}
+      >
         {formatLabel ? formatLabel(value) : value}
       </Text>
     </View>
