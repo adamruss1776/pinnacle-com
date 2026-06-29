@@ -31,9 +31,9 @@ type ExtractedFields = {
 function getOcrEndpoint(): string {
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (domain) {
-    return `https://${domain}/api-server/api/ocr`;
+    return `https://${domain}/api/ocr`;
   }
-  return "http://localhost:3001/api/ocr";
+  return "http://localhost:8080/api/ocr";
 }
 
 export default function ImportScreen() {
