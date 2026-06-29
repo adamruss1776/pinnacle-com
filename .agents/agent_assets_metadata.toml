@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "g9bLdhgiexkBIumapD0E-"
+uri = "file://artifacts/earniq/assets/images/icon.png"
+type = "image"
+title = "earniq app icon"
