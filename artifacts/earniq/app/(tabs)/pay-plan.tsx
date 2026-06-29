@@ -1,6 +1,8 @@
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,17 +20,19 @@ import { CustomSlider } from "@/components/CustomSlider";
 import { DEFAULT_PAY_PLAN, type PayPlan, useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 import { calcCommission } from "@/utils/commission";
+import { exportDataAsCsv } from "@/utils/exportData";
 
 export default function PayPlanScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { payPlan, updatePayPlan } = useData();
+  const { payPlan, updatePayPlan, deals, spiffs } = useData();
 
   const [localPlan, setLocalPlan] = useState<PayPlan>(payPlan);
   const [calcFrontGross, setCalcFrontGross] = useState("");
   const [calcBackGross, setCalcBackGross] = useState("");
   const [calcType, setCalcType] = useState<"new" | "used">("new");
   const [saved, setSaved] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   function update(field: keyof PayPlan, value: number | boolean) {
     setLocalPlan((prev) => ({ ...prev, [field]: value }));
@@ -45,6 +49,19 @@ export default function PayPlanScreen() {
   function handleReset() {
     setLocalPlan(DEFAULT_PAY_PLAN);
     setSaved(false);
+  }
+
+  async function handleExport() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      await exportDataAsCsv(deals, spiffs, payPlan);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not export data.";
+      Alert.alert("Export Failed", message);
+    } finally {
+      setExporting(false);
+    }
   }
 
   const front = parseFloat(calcFrontGross) || 0;
@@ -229,6 +246,28 @@ export default function PayPlanScreen() {
             </Text>
           </TouchableOpacity>
 
+          {/* Export Data */}
+          <TouchableOpacity
+            style={[styles.exportBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={handleExport}
+            disabled={exporting}
+            activeOpacity={0.75}
+          >
+            {exporting ? (
+              <ActivityIndicator size="small" color={colors.green} />
+            ) : (
+              <Text style={[styles.exportIcon]}>📤</Text>
+            )}
+            <View style={styles.exportTextWrap}>
+              <Text style={[styles.exportTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                Export Data
+              </Text>
+              <Text style={[styles.exportSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {`Save ${deals.length} deal${deals.length !== 1 ? "s" : ""} & ${spiffs.length} spiff${spiffs.length !== 1 ? "s" : ""} as CSV`}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
           {/* Calculator */}
           <View style={[styles.calcCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.calcTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
@@ -356,6 +395,19 @@ const styles = StyleSheet.create({
   toggleSubtitle: { fontSize: 13, maxWidth: "80%" },
   resetBtn: { alignItems: "center", paddingVertical: 4 },
   resetText: { fontSize: 14 },
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  exportIcon: { fontSize: 22 },
+  exportTextWrap: { flex: 1 },
+  exportTitle: { fontSize: 15 },
+  exportSubtitle: { fontSize: 12, marginTop: 2 },
   calcCard: { borderRadius: 14, padding: 16, borderWidth: 1, gap: 12 },
   calcTitle: { fontSize: 20 },
   calcSubtitle: { fontSize: 13, marginTop: -4 },
