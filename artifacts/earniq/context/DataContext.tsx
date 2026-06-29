@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { calcCommission, generateId, isThisMonth, isThisYear } from "@/utils/commission";
@@ -50,6 +51,13 @@ export const DEFAULT_PAY_PLAN: PayPlan = {
   enforceCaps: true,
 };
 
+export interface MonthlyDataPoint {
+  label: string;
+  total: number;
+  year: number;
+  month: number;
+}
+
 interface DataContextValue {
   deals: Deal[];
   spiffs: Spiff[];
@@ -64,6 +72,8 @@ interface DataContextValue {
   ytdCommission: number;
   avgCommissionPerDeal: number;
   recentDeals: Deal[];
+  monthlyCommissions: MonthlyDataPoint[];
+  projectedMonthEnd: number;
 }
 
 const DEALS_KEY = "@earniq_deals";
@@ -179,6 +189,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const recentDeals = deals.slice(0, 5);
 
+  const monthlyCommissions = useMemo<MonthlyDataPoint[]>(() => {
+    const now = new Date();
+    const result: MonthlyDataPoint[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const label = d.toLocaleDateString("en-US", { month: "short" });
+      const dealTotal = deals
+        .filter((deal) => {
+          const dd = new Date(deal.date);
+          return dd.getFullYear() === year && dd.getMonth() === month;
+        })
+        .reduce((sum, deal) => sum + deal.commission, 0);
+      const spiffTotal = spiffs
+        .filter((s) => {
+          const sd = new Date(s.date);
+          return sd.getFullYear() === year && sd.getMonth() === month;
+        })
+        .reduce((sum, s) => sum + s.amount, 0);
+      result.push({ label, total: dealTotal + spiffTotal, year, month });
+    }
+    return result;
+  }, [deals, spiffs]);
+
+  const projectedMonthEnd = useMemo(() => {
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const fraction = dayOfMonth / daysInMonth;
+    return fraction > 0 ? mtdCommission / fraction : 0;
+  }, [mtdCommission]);
+
   return (
     <DataContext.Provider
       value={{
@@ -195,6 +238,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         ytdCommission,
         avgCommissionPerDeal,
         recentDeals,
+        monthlyCommissions,
+        projectedMonthEnd,
       }}
     >
       {children}

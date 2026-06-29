@@ -181,6 +181,28 @@ export default function DealLogScreen() {
           </View>
         </View>
 
+        {/* Deal Stats Row */}
+        <View style={[styles.statsRow, { gap: 12 }]}>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Deal Count
+            </Text>
+            <Text style={[styles.statValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              {filteredDeals.length}
+            </Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Avg per Deal
+            </Text>
+            <Text style={[styles.statValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              {filteredDeals.length > 0
+                ? formatCurrency(totalDealComm / filteredDeals.length)
+                : "—"}
+            </Text>
+          </View>
+        </View>
+
         {/* Deals */}
         <Text style={[styles.sectionTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
           Deals ({filteredDeals.length})
@@ -273,6 +295,16 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: 12, marginBottom: 4 },
   summaryValue: { fontSize: 16 },
   divider: { width: 1, marginHorizontal: 8 },
+  statsRow: { flexDirection: "row", marginBottom: 4 },
+  statCard: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  statLabel: { fontSize: 11, marginBottom: 4, textAlign: "center" },
+  statValue: { fontSize: 17 },
   sectionTitle: { fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
   empty: { alignItems: "center", paddingVertical: 24, gap: 8 },
   emptyText: { fontSize: 14 },

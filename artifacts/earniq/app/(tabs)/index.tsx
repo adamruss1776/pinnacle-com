@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DealCard } from "@/components/DealCard";
+import { MonthlyBarChart } from "@/components/MonthlyBarChart";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 import { formatCurrency } from "@/utils/commission";
@@ -20,9 +21,20 @@ import { formatCurrency } from "@/utils/commission";
 export default function EarningsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { mtdCommission, ytdCommission, avgCommissionPerDeal, recentDeals, isLoading } = useData();
+  const {
+    mtdCommission,
+    ytdCommission,
+    avgCommissionPerDeal,
+    recentDeals,
+    isLoading,
+    monthlyCommissions,
+    projectedMonthEnd,
+  } = useData();
 
   const now = new Date();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const pacePercent = Math.round((dayOfMonth / daysInMonth) * 100);
   const monthName = now.toLocaleDateString("en-US", { month: "long" });
   const year = now.getFullYear();
 
@@ -113,6 +125,46 @@ export default function EarningsScreen() {
               {formatCurrency(avgCommissionPerDeal)}
             </Text>
           </View>
+        </View>
+
+        {/* Monthly Trend Chart */}
+        <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.chartTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+            Commission Trend
+          </Text>
+          <View style={styles.chartWrap}>
+            <MonthlyBarChart data={monthlyCommissions} height={100} />
+          </View>
+        </View>
+
+        {/* Pace Indicator */}
+        <View style={[styles.paceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.paceHeader}>
+            <View>
+              <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Projected Month-End
+              </Text>
+              <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {formatCurrency(projectedMonthEnd)}
+              </Text>
+            </View>
+            <View style={[styles.paceBadge, { backgroundColor: "#0d1f14" }]}>
+              <Text style={[styles.paceBadgeText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
+                Day {dayOfMonth}/{daysInMonth}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.paceTrack, { backgroundColor: "#0d1f14" }]}>
+            <View
+              style={[
+                styles.paceFill,
+                { backgroundColor: colors.green, width: `${pacePercent}%` as any },
+              ]}
+            />
+          </View>
+          <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            {pacePercent}% of month elapsed
+          </Text>
         </View>
 
         {/* Import Button */}
@@ -226,6 +278,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 12,
   },
+  chartCard: {
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+  },
+  chartTitle: { fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 },
+  chartWrap: { alignItems: "center" },
+  paceCard: {
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    gap: 10,
+  },
+  paceHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  paceLabel: { fontSize: 12, marginBottom: 2 },
+  paceValue: { fontSize: 20 },
+  paceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  paceBadgeText: { fontSize: 12 },
+  paceTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
+  paceFill: { height: 6, borderRadius: 3 },
+  paceSub: { fontSize: 12 },
   importIconWrap: {
     width: 40,
     height: 40,
