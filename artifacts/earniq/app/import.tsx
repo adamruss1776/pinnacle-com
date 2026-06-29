@@ -1,5 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -19,18 +20,35 @@ import { useColors } from "@/hooks/useColors";
 
 type ImportStep = "choose" | "processing" | "review";
 
+type ExtractedFields = {
+  vehicleName: string;
+  frontGross: string;
+  backGross: string;
+  date: string;
+  type: "new" | "used";
+};
+
+function getOcrEndpoint(): string {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (domain) {
+    return `https://${domain}/api-server/api/ocr`;
+  }
+  return "http://localhost:3001/api/ocr";
+}
+
 export default function ImportScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState<ImportStep>("choose");
   const [sourceType, setSourceType] = useState<"photo" | "pdf" | null>(null);
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
-  const [extracted, setExtracted] = useState({
+  const [extracted, setExtracted] = useState<ExtractedFields>({
     vehicleName: "",
     frontGross: "",
     backGross: "",
-    date: "",
-    type: "new" as "new" | "used",
+    date: new Date().toISOString().split("T")[0]!,
+    type: "new",
   });
 
   async function handleCamera() {
@@ -46,7 +64,7 @@ export default function ImportScreen() {
     });
     if (!result.canceled) {
       setSourceType("photo");
-      processImage(result.assets[0].uri);
+      await processImage(result.assets[0]!.uri, result.assets[0]!.mimeType ?? "image/jpeg");
     }
   }
 
@@ -58,7 +76,7 @@ export default function ImportScreen() {
     });
     if (!result.canceled) {
       setSourceType("photo");
-      processImage(result.assets[0].uri);
+      await processImage(result.assets[0]!.uri, result.assets[0]!.mimeType ?? "image/jpeg");
     }
   }
 
@@ -70,39 +88,94 @@ export default function ImportScreen() {
     }
     const result = await DocumentPicker.getDocumentAsync({
       type: "application/pdf",
+      copyToCacheDirectory: true,
     });
     if (!result.canceled) {
       setSourceType("pdf");
-      processPDF(result.assets[0].name);
+      await processPDF(result.assets[0]!.uri);
     }
   }
 
-  function processImage(uri: string) {
+  async function processImage(uri: string, mimeType: string) {
     setStep("processing");
-    setTimeout(() => {
+    setOcrError(null);
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const response = await fetch(getOcrEndpoint(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as ExtractedFields;
+      setExtracted({
+        vehicleName: data.vehicleName ?? "",
+        frontGross: data.frontGross ?? "",
+        backGross: data.backGross ?? "",
+        date: data.date || new Date().toISOString().split("T")[0]!,
+        type: data.type === "used" ? "used" : "new",
+      });
+      setStep("review");
+    } catch (err) {
+      console.error("OCR failed:", err);
+      setOcrError("Couldn't read the document. Fields will be blank — fill them in manually.");
       setExtracted({
         vehicleName: "",
         frontGross: "",
         backGross: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split("T")[0]!,
         type: "new",
       });
       setStep("review");
-    }, 2200);
+    }
   }
 
-  function processPDF(filename: string) {
+  async function processPDF(uri: string) {
     setStep("processing");
-    setTimeout(() => {
+    setOcrError(null);
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const response = await fetch(getOcrEndpoint(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: "application/pdf" }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as ExtractedFields;
+      setExtracted({
+        vehicleName: data.vehicleName ?? "",
+        frontGross: data.frontGross ?? "",
+        backGross: data.backGross ?? "",
+        date: data.date || new Date().toISOString().split("T")[0]!,
+        type: data.type === "used" ? "used" : "new",
+      });
+      setStep("review");
+    } catch (err) {
+      console.error("PDF OCR failed:", err);
+      setOcrError("Couldn't read the PDF. Fields will be blank — fill them in manually.");
       setExtracted({
         vehicleName: "",
         frontGross: "",
         backGross: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split("T")[0]!,
         type: "new",
       });
       setStep("review");
-    }, 2200);
+    }
   }
 
   function handleContinue() {
@@ -120,7 +193,6 @@ export default function ImportScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View
         style={[
           styles.header,
@@ -153,7 +225,7 @@ export default function ImportScreen() {
               Import a Deal Sheet
             </Text>
             <Text style={[styles.chooseSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Take a photo or upload a PDF of your deal sheet. We'll extract the key fields for you to review.
+              Take a photo or upload a PDF of your deal sheet. AI will extract the key fields for you to review.
             </Text>
 
             <View style={styles.options}>
@@ -221,22 +293,63 @@ export default function ImportScreen() {
               Scanning Document...
             </Text>
             <Text style={[styles.processingDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Extracting deal information from your {sourceType === "pdf" ? "PDF" : "image"}
+              AI is extracting deal information from your {sourceType === "pdf" ? "PDF" : "image"}
             </Text>
           </View>
         )}
 
         {step === "review" && (
           <View style={styles.reviewStep}>
-            <View style={[styles.reviewCard, { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }]}>
-              <Feather name="check-circle" size={24} color={colors.green} />
-              <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                Document Scanned
-              </Text>
-              <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                Review and complete the pre-filled fields on the next screen. Fields extracted from the document will be highlighted — please verify they're correct before saving.
-              </Text>
-            </View>
+            {ocrError ? (
+              <View style={[styles.reviewCard, { backgroundColor: "#1f1200", borderColor: "#3d2800" }]}>
+                <Feather name="alert-circle" size={24} color={colors.amber} />
+                <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  Partial Extraction
+                </Text>
+                <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  {ocrError}
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.reviewCard, { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }]}>
+                <Feather name="check-circle" size={24} color={colors.green} />
+                <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  Document Scanned
+                </Text>
+                {(extracted.vehicleName || extracted.frontGross || extracted.backGross) ? (
+                  <View style={styles.previewFields}>
+                    {!!extracted.vehicleName && (
+                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Vehicle: </Text>
+                        {extracted.vehicleName}
+                      </Text>
+                    )}
+                    {!!extracted.frontGross && (
+                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Front Gross: </Text>
+                        ${extracted.frontGross}
+                      </Text>
+                    )}
+                    {!!extracted.backGross && (
+                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Back Gross: </Text>
+                        ${extracted.backGross}
+                      </Text>
+                    )}
+                    {!!extracted.date && (
+                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Date: </Text>
+                        {extracted.date}
+                      </Text>
+                    )}
+                  </View>
+                ) : (
+                  <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                    Review and complete the pre-filled fields on the next screen. Verify all values before saving.
+                  </Text>
+                )}
+              </View>
+            )}
 
             <TouchableOpacity
               style={[styles.continueBtn, { backgroundColor: colors.green }]}
@@ -317,6 +430,8 @@ const styles = StyleSheet.create({
   },
   reviewTitle: { fontSize: 18 },
   reviewDesc: { fontSize: 14, textAlign: "center", lineHeight: 20 },
+  previewFields: { gap: 4, alignSelf: "stretch" },
+  fieldRow: { fontSize: 14, lineHeight: 22 },
   continueBtn: {
     flexDirection: "row",
     alignItems: "center",
