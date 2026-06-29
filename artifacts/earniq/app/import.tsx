@@ -101,7 +101,7 @@ export default function ImportScreen() {
     setOcrError(null);
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: "base64",
       });
 
       const response = await fetch(getOcrEndpoint(), {
@@ -142,7 +142,7 @@ export default function ImportScreen() {
     setOcrError(null);
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: "base64",
       });
 
       const response = await fetch(getOcrEndpoint(), {
