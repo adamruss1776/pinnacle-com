@@ -30,6 +30,7 @@ export default function EarningsScreen() {
     monthlyCommissions,
     projectedMonthEnd,
     projectionReady,
+    projectionHasLargeItem,
   } = useData();
 
   const now = new Date();
@@ -178,6 +179,14 @@ export default function EarningsScreen() {
               Projection available after day 5 — too early to estimate reliably
             </Text>
           )}
+          {projectionReady && projectionHasLargeItem && (
+            <View style={[styles.largeItemWarning, { backgroundColor: "#2d1f00", borderColor: "#7c4f00" }]}>
+              <Ionicons name="warning-outline" size={13} color={colors.amber} />
+              <Text style={[styles.largeItemWarningText, { color: colors.amber, fontFamily: "Inter_400Regular" }]}>
+                Includes a large one-time item — projection may be elevated
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Import Button */}
@@ -312,6 +321,16 @@ const styles = StyleSheet.create({
   paceTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
   paceFill: { height: 6, borderRadius: 3 },
   paceSub: { fontSize: 12 },
+  largeItemWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  largeItemWarningText: { fontSize: 12, flex: 1 },
   importIconWrap: {
     width: 40,
     height: 40,

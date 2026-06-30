@@ -77,6 +77,7 @@ interface DataContextValue {
   monthlyCommissions: MonthlyDataPoint[];
   projectedMonthEnd: number;
   projectionReady: boolean;
+  projectionHasLargeItem: boolean;
 }
 
 const DEALS_KEY = "@earniq_deals";
@@ -250,18 +251,35 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [deals, spiffs]);
 
   const PROJECTION_MIN_DAY = 5;
+  const LARGE_ITEM_THRESHOLD = 0.5;
 
-  const { projectedMonthEnd, projectionReady } = useMemo(() => {
+  const { projectedMonthEnd, projectionReady, projectionHasLargeItem } = useMemo(() => {
     const now = new Date();
     const dayOfMonth = now.getDate();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const fraction = dayOfMonth / daysInMonth;
     const ready = dayOfMonth >= PROJECTION_MIN_DAY;
+
+    let hasLargeItem = false;
+    if (mtdCommission > 0) {
+      const maxDealCommission = mtdDeals.reduce(
+        (max, d) => Math.max(max, d.commission),
+        0
+      );
+      const maxSpiffAmount = mtdSpiffs.reduce(
+        (max, s) => Math.max(max, s.amount),
+        0
+      );
+      const largestSingle = Math.max(maxDealCommission, maxSpiffAmount);
+      hasLargeItem = largestSingle / mtdCommission > LARGE_ITEM_THRESHOLD;
+    }
+
     return {
       projectionReady: ready,
       projectedMonthEnd: ready && fraction > 0 ? mtdCommission / fraction : 0,
+      projectionHasLargeItem: hasLargeItem,
     };
-  }, [mtdCommission]);
+  }, [mtdCommission, mtdDeals, mtdSpiffs]);
 
   return (
     <DataContext.Provider
@@ -284,6 +302,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         monthlyCommissions,
         projectedMonthEnd,
         projectionReady,
+        projectionHasLargeItem,
       }}
     >
       {children}
