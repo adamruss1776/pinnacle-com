@@ -8,9 +8,12 @@ import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Modal,
   Platform,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -32,6 +35,8 @@ type ExtractedFields = {
   fieldsFound?: number;
 };
 
+type EditableField = "vehicleName" | "frontGross" | "backGross" | "date" | "type";
+
 type Colors = ReturnType<typeof useColors>;
 
 function FieldStatus({
@@ -39,15 +44,25 @@ function FieldStatus({
   value,
   prefix = "",
   colors,
+  onEdit,
 }: {
   label: string;
   value: string;
   prefix?: string;
   colors: Colors;
+  onEdit?: () => void;
 }) {
   const found = !!value;
   return (
-    <View style={fieldStatusStyles.row}>
+    <TouchableOpacity
+      style={fieldStatusStyles.row}
+      onPress={() => {
+        Haptics.selectionAsync();
+        onEdit?.();
+      }}
+      activeOpacity={0.6}
+      disabled={!onEdit}
+    >
       <Feather
         name={found ? "check" : "minus-circle"}
         size={14}
@@ -60,17 +75,25 @@ function FieldStatus({
       <Text
         style={[
           fieldStatusStyles.value,
-          { color: found ? colors.foreground : colors.mutedForeground, fontFamily: "Inter_400Regular" },
+          { color: found ? colors.foreground : colors.amber, fontFamily: "Inter_400Regular" },
         ]}
       >
         {found ? `${prefix}${value}` : "needs entry"}
       </Text>
-    </View>
+      {onEdit && (
+        <Feather
+          name="edit-2"
+          size={12}
+          color={found ? colors.mutedForeground : colors.amber}
+          style={{ marginLeft: 2 }}
+        />
+      )}
+    </TouchableOpacity>
   );
 }
 
 const fieldStatusStyles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 2 },
+  row: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
   label: { fontSize: 13 },
   value: { fontSize: 13, flex: 1 },
 });
@@ -82,6 +105,30 @@ function getOcrEndpoint(): string {
   }
   return "http://localhost:8080/api/ocr";
 }
+
+const FIELD_LABELS: Record<EditableField, string> = {
+  vehicleName: "Vehicle",
+  frontGross: "Front Gross",
+  backGross: "Back Gross",
+  date: "Date",
+  type: "Deal Type",
+};
+
+const FIELD_KEYBOARD: Record<EditableField, "default" | "numeric" | "numbers-and-punctuation"> = {
+  vehicleName: "default",
+  frontGross: "numeric",
+  backGross: "numeric",
+  date: "numbers-and-punctuation",
+  type: "default",
+};
+
+const FIELD_PLACEHOLDER: Record<EditableField, string> = {
+  vehicleName: "e.g. 2023 Toyota Camry",
+  frontGross: "e.g. 1500",
+  backGross: "e.g. 800",
+  date: "YYYY-MM-DD",
+  type: "",
+};
 
 export default function ImportScreen() {
   const colors = useColors();
@@ -99,6 +146,28 @@ export default function ImportScreen() {
     date: new Date().toISOString().split("T")[0]!,
     type: "new",
   });
+
+  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  function openEdit(field: EditableField) {
+    setEditValue(field === "type" ? extracted.type : (extracted[field] as string));
+    setEditingField(field);
+  }
+
+  function commitEdit() {
+    if (!editingField) return;
+    if (editingField === "type") {
+      setExtracted((prev) => ({ ...prev, type: editValue === "used" ? "used" : "new" }));
+    } else {
+      setExtracted((prev) => ({ ...prev, [editingField]: editValue.trim() }));
+    }
+    setEditingField(null);
+  }
+
+  function dismissEdit() {
+    setEditingField(null);
+  }
 
   async function handleCamera() {
     Haptics.selectionAsync();
@@ -395,6 +464,12 @@ export default function ImportScreen() {
                 <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                   {ocrError}
                 </Text>
+                <View style={styles.fieldStatusList}>
+                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} onEdit={() => openEdit("vehicleName")} />
+                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
+                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} onEdit={() => openEdit("backGross")} />
+                  <FieldStatus label="Date" value={extracted.date} colors={colors} onEdit={() => openEdit("date")} />
+                </View>
               </View>
             ) : lowConfidence ? (
               <View style={[styles.reviewCard, { backgroundColor: "#1f1200", borderColor: "#3d2800" }]}>
@@ -406,10 +481,10 @@ export default function ImportScreen() {
                   No deal information could be read from this image. Try retaking the photo with better lighting, from a closer angle, or make sure the deal sheet is flat and fully in frame.
                 </Text>
                 <View style={styles.fieldStatusList}>
-                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} />
-                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} />
-                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} />
-                  <FieldStatus label="Date" value={extracted.date} colors={colors} />
+                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} onEdit={() => openEdit("vehicleName")} />
+                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
+                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} onEdit={() => openEdit("backGross")} />
+                  <FieldStatus label="Date" value={extracted.date} colors={colors} onEdit={() => openEdit("date")} />
                 </View>
               </View>
             ) : (
@@ -419,10 +494,10 @@ export default function ImportScreen() {
                   Document Scanned
                 </Text>
                 <View style={styles.fieldStatusList}>
-                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} />
-                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} />
-                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} />
-                  <FieldStatus label="Date" value={extracted.date} colors={colors} />
+                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} onEdit={() => openEdit("vehicleName")} />
+                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
+                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} onEdit={() => openEdit("backGross")} />
+                  <FieldStatus label="Date" value={extracted.date} colors={colors} onEdit={() => openEdit("date")} />
                 </View>
               </View>
             )}
@@ -456,7 +531,7 @@ export default function ImportScreen() {
                 </View>
                 {missingCriticalCount > 0 && (
                   <Text style={[styles.continueBtnSubtitle, { color: colors.primaryForeground, fontFamily: "Inter_400Regular" }]}>
-                    You'll need to fill in {missingCriticalCount} required {missingCriticalCount === 1 ? "field" : "fields"}
+                    {missingCriticalCount} required {missingCriticalCount === 1 ? "field" : "fields"} still need entry
                   </Text>
                 )}
               </View>
@@ -472,6 +547,103 @@ export default function ImportScreen() {
           </View>
         )}
       </View>
+
+      <Modal
+        visible={editingField !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={dismissEdit}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={dismissEdit} />
+          <View style={[styles.modalSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.modalLabel, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+              {editingField ? FIELD_LABELS[editingField] : ""}
+            </Text>
+
+            {editingField === "type" ? (
+              <View style={styles.typeToggleRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.typeToggleBtn,
+                    { borderColor: colors.border },
+                    editValue === "new" && { backgroundColor: colors.green, borderColor: colors.green },
+                  ]}
+                  onPress={() => setEditValue("new")}
+                >
+                  <Text
+                    style={[
+                      styles.typeToggleText,
+                      { color: editValue === "new" ? colors.primaryForeground : colors.foreground, fontFamily: "Inter_600SemiBold" },
+                    ]}
+                  >
+                    New
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.typeToggleBtn,
+                    { borderColor: colors.border },
+                    editValue === "used" && { backgroundColor: colors.green, borderColor: colors.green },
+                  ]}
+                  onPress={() => setEditValue("used")}
+                >
+                  <Text
+                    style={[
+                      styles.typeToggleText,
+                      { color: editValue === "used" ? colors.primaryForeground : colors.foreground, fontFamily: "Inter_600SemiBold" },
+                    ]}
+                  >
+                    Used
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TextInput
+                style={[
+                  styles.modalInput,
+                  {
+                    color: colors.foreground,
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                    fontFamily: "Inter_400Regular",
+                  },
+                ]}
+                value={editValue}
+                onChangeText={setEditValue}
+                placeholder={editingField ? FIELD_PLACEHOLDER[editingField] : ""}
+                placeholderTextColor={colors.mutedForeground}
+                keyboardType={editingField ? FIELD_KEYBOARD[editingField] : "default"}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={commitEdit}
+              />
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, { borderColor: colors.border }]}
+                onPress={dismissEdit}
+              >
+                <Text style={[styles.modalCancelText, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, { backgroundColor: colors.green }]}
+                onPress={commitEdit}
+              >
+                <Text style={[styles.modalSaveText, { color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }]}>
+                  Save
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -562,4 +734,63 @@ const styles = StyleSheet.create({
   continueBtnSubtitle: { fontSize: 12, opacity: 0.85 },
   retryBtn: { alignItems: "center" },
   retryText: { fontSize: 14 },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    padding: 24,
+    gap: 16,
+  },
+  modalLabel: {
+    fontSize: 13,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  typeToggleRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  typeToggleBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  typeToggleText: { fontSize: 15 },
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  modalCancelText: { fontSize: 15 },
+  modalSaveBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalSaveText: { fontSize: 15 },
 });
