@@ -29,6 +29,7 @@ export default function EarningsScreen() {
     isLoading,
     monthlyCommissions,
     projectedMonthEnd,
+    projectionReady,
   } = useData();
 
   const now = new Date();
@@ -140,13 +141,19 @@ export default function EarningsScreen() {
         {/* Pace Indicator */}
         <View style={[styles.paceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.paceHeader}>
-            <View>
+            <View style={{ flex: 1, marginRight: 12 }}>
               <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                 Projected Month-End
               </Text>
-              <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                {formatCurrency(projectedMonthEnd)}
-              </Text>
+              {projectionReady ? (
+                <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                  {formatCurrency(projectedMonthEnd)}
+                </Text>
+              ) : (
+                <Text style={[styles.paceValue, { color: colors.mutedForeground, fontFamily: "Inter_700Bold" }]}>
+                  —
+                </Text>
+              )}
             </View>
             <View style={[styles.paceBadge, { backgroundColor: "#0d1f14" }]}>
               <Text style={[styles.paceBadgeText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
@@ -162,9 +169,15 @@ export default function EarningsScreen() {
               ]}
             />
           </View>
-          <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            {pacePercent}% of month elapsed
-          </Text>
+          {projectionReady ? (
+            <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              {pacePercent}% of month elapsed
+            </Text>
+          ) : (
+            <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Projection available after day 5 — too early to estimate reliably
+            </Text>
+          )}
         </View>
 
         {/* Import Button */}

@@ -76,6 +76,7 @@ interface DataContextValue {
   recentDeals: Deal[];
   monthlyCommissions: MonthlyDataPoint[];
   projectedMonthEnd: number;
+  projectionReady: boolean;
 }
 
 const DEALS_KEY = "@earniq_deals";
@@ -248,12 +249,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, [deals, spiffs]);
 
-  const projectedMonthEnd = useMemo(() => {
+  const PROJECTION_MIN_DAY = 5;
+
+  const { projectedMonthEnd, projectionReady } = useMemo(() => {
     const now = new Date();
     const dayOfMonth = now.getDate();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const fraction = dayOfMonth / daysInMonth;
-    return fraction > 0 ? mtdCommission / fraction : 0;
+    const ready = dayOfMonth >= PROJECTION_MIN_DAY;
+    return {
+      projectionReady: ready,
+      projectedMonthEnd: ready && fraction > 0 ? mtdCommission / fraction : 0,
+    };
   }, [mtdCommission]);
 
   return (
@@ -276,6 +283,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         recentDeals,
         monthlyCommissions,
         projectedMonthEnd,
+        projectionReady,
       }}
     >
       {children}
