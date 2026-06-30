@@ -26,7 +26,52 @@ type ExtractedFields = {
   backGross: string;
   date: string;
   type: "new" | "used";
+  lowConfidence?: boolean;
+  fieldsFound?: number;
 };
+
+type Colors = ReturnType<typeof useColors>;
+
+function FieldStatus({
+  label,
+  value,
+  prefix = "",
+  colors,
+}: {
+  label: string;
+  value: string;
+  prefix?: string;
+  colors: Colors;
+}) {
+  const found = !!value;
+  return (
+    <View style={fieldStatusStyles.row}>
+      <Feather
+        name={found ? "check" : "minus-circle"}
+        size={14}
+        color={found ? colors.green : colors.amber}
+        style={{ marginTop: 1 }}
+      />
+      <Text style={[fieldStatusStyles.label, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+        {label}:
+      </Text>
+      <Text
+        style={[
+          fieldStatusStyles.value,
+          { color: found ? colors.foreground : colors.mutedForeground, fontFamily: "Inter_400Regular" },
+        ]}
+      >
+        {found ? `${prefix}${value}` : "needs entry"}
+      </Text>
+    </View>
+  );
+}
+
+const fieldStatusStyles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 2 },
+  label: { fontSize: 13 },
+  value: { fontSize: 13, flex: 1 },
+});
 
 function getOcrEndpoint(): string {
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
@@ -42,6 +87,7 @@ export default function ImportScreen() {
   const [step, setStep] = useState<ImportStep>("choose");
   const [sourceType, setSourceType] = useState<"photo" | "pdf" | null>(null);
   const [ocrError, setOcrError] = useState<string | null>(null);
+  const [lowConfidence, setLowConfidence] = useState(false);
 
   const [extracted, setExtracted] = useState<ExtractedFields>({
     vehicleName: "",
@@ -99,6 +145,7 @@ export default function ImportScreen() {
   async function processImage(uri: string, mimeType: string) {
     setStep("processing");
     setOcrError(null);
+    setLowConfidence(false);
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: "base64",
@@ -115,6 +162,8 @@ export default function ImportScreen() {
       }
 
       const data = (await response.json()) as ExtractedFields;
+      const isLow = data.lowConfidence ?? (!data.vehicleName && !data.frontGross && !data.backGross);
+      setLowConfidence(isLow);
       setExtracted({
         vehicleName: data.vehicleName ?? "",
         frontGross: data.frontGross ?? "",
@@ -125,7 +174,8 @@ export default function ImportScreen() {
       setStep("review");
     } catch (err) {
       console.error("OCR failed:", err);
-      setOcrError("Couldn't read the document. Fields will be blank — fill them in manually.");
+      setOcrError("Couldn't reach the server. Fill in the fields manually.");
+      setLowConfidence(false);
       setExtracted({
         vehicleName: "",
         frontGross: "",
@@ -140,6 +190,7 @@ export default function ImportScreen() {
   async function processPDF(uri: string) {
     setStep("processing");
     setOcrError(null);
+    setLowConfidence(false);
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: "base64",
@@ -156,6 +207,8 @@ export default function ImportScreen() {
       }
 
       const data = (await response.json()) as ExtractedFields;
+      const isLow = data.lowConfidence ?? (!data.vehicleName && !data.frontGross && !data.backGross);
+      setLowConfidence(isLow);
       setExtracted({
         vehicleName: data.vehicleName ?? "",
         frontGross: data.frontGross ?? "",
@@ -166,7 +219,8 @@ export default function ImportScreen() {
       setStep("review");
     } catch (err) {
       console.error("PDF OCR failed:", err);
-      setOcrError("Couldn't read the PDF. Fields will be blank — fill them in manually.");
+      setOcrError("Couldn't reach the server. Fill in the fields manually.");
+      setLowConfidence(false);
       setExtracted({
         vehicleName: "",
         frontGross: "",
@@ -304,11 +358,27 @@ export default function ImportScreen() {
               <View style={[styles.reviewCard, { backgroundColor: "#1f1200", borderColor: "#3d2800" }]}>
                 <Feather name="alert-circle" size={24} color={colors.amber} />
                 <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                  Partial Extraction
+                  Scan Failed
                 </Text>
                 <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                   {ocrError}
                 </Text>
+              </View>
+            ) : lowConfidence ? (
+              <View style={[styles.reviewCard, { backgroundColor: "#1f1200", borderColor: "#3d2800" }]}>
+                <Feather name="alert-triangle" size={24} color={colors.amber} />
+                <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  Low Quality Scan
+                </Text>
+                <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  No deal information could be read from this image. Try retaking the photo with better lighting, from a closer angle, or make sure the deal sheet is flat and fully in frame.
+                </Text>
+                <View style={styles.fieldStatusList}>
+                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} />
+                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} />
+                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} />
+                  <FieldStatus label="Date" value={extracted.date} colors={colors} />
+                </View>
               </View>
             ) : (
               <View style={[styles.reviewCard, { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }]}>
@@ -316,39 +386,25 @@ export default function ImportScreen() {
                 <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
                   Document Scanned
                 </Text>
-                {(extracted.vehicleName || extracted.frontGross || extracted.backGross) ? (
-                  <View style={styles.previewFields}>
-                    {!!extracted.vehicleName && (
-                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Vehicle: </Text>
-                        {extracted.vehicleName}
-                      </Text>
-                    )}
-                    {!!extracted.frontGross && (
-                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Front Gross: </Text>
-                        ${extracted.frontGross}
-                      </Text>
-                    )}
-                    {!!extracted.backGross && (
-                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Back Gross: </Text>
-                        ${extracted.backGross}
-                      </Text>
-                    )}
-                    {!!extracted.date && (
-                      <Text style={[styles.fieldRow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium" }}>Date: </Text>
-                        {extracted.date}
-                      </Text>
-                    )}
-                  </View>
-                ) : (
-                  <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                    Review and complete the pre-filled fields on the next screen. Verify all values before saving.
-                  </Text>
-                )}
+                <View style={styles.fieldStatusList}>
+                  <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} />
+                  <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} />
+                  <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} />
+                  <FieldStatus label="Date" value={extracted.date} colors={colors} />
+                </View>
               </View>
+            )}
+
+            {lowConfidence && !ocrError && (
+              <TouchableOpacity
+                style={[styles.retakeBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => setStep("choose")}
+              >
+                <Ionicons name="camera-outline" size={18} color={colors.foreground} />
+                <Text style={[styles.retakeBtnText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  Retake Photo
+                </Text>
+              </TouchableOpacity>
             )}
 
             <TouchableOpacity
@@ -356,16 +412,18 @@ export default function ImportScreen() {
               onPress={handleContinue}
             >
               <Text style={[styles.continueBtnText, { color: colors.primaryForeground, fontFamily: "Inter_700Bold" }]}>
-                Review & Save Deal
+                {lowConfidence || ocrError ? "Fill In Manually" : "Review & Save Deal"}
               </Text>
               <Ionicons name="chevron-forward" size={20} color={colors.primaryForeground} />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setStep("choose")} style={styles.retryBtn}>
-              <Text style={[styles.retryText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-                Try a different document
-              </Text>
-            </TouchableOpacity>
+            {(!lowConfidence && !ocrError) && (
+              <TouchableOpacity onPress={() => setStep("choose")} style={styles.retryBtn}>
+                <Text style={[styles.retryText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  Try a different document
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
@@ -432,6 +490,17 @@ const styles = StyleSheet.create({
   reviewDesc: { fontSize: 14, textAlign: "center", lineHeight: 20 },
   previewFields: { gap: 4, alignSelf: "stretch" },
   fieldRow: { fontSize: 14, lineHeight: 22 },
+  fieldStatusList: { gap: 2, alignSelf: "stretch", marginTop: 4 },
+  retakeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 8,
+  },
+  retakeBtnText: { fontSize: 15 },
   continueBtn: {
     flexDirection: "row",
     alignItems: "center",

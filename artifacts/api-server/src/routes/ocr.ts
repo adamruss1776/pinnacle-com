@@ -28,6 +28,8 @@ type ExtractedFields = {
   backGross: string;
   date: string;
   type: "new" | "used";
+  fieldsFound: number;
+  lowConfidence: boolean;
 };
 
 function cleanNumber(v: string | undefined): string {
@@ -39,15 +41,21 @@ function parseExtraction(raw: string): ExtractedFields {
   try {
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw) as Partial<ExtractedFields>;
+    const vehicleName = parsed.vehicleName ?? "";
+    const frontGross = cleanNumber(parsed.frontGross as string | undefined);
+    const backGross = cleanNumber(parsed.backGross as string | undefined);
+    const fieldsFound = [vehicleName, frontGross, backGross].filter(Boolean).length;
     return {
-      vehicleName: parsed.vehicleName ?? "",
-      frontGross: cleanNumber(parsed.frontGross),
-      backGross: cleanNumber(parsed.backGross),
+      vehicleName,
+      frontGross,
+      backGross,
       date:
-        parsed.date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)
-          ? parsed.date
+        parsed.date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date as string)
+          ? (parsed.date as string)
           : new Date().toISOString().split("T")[0]!,
       type: parsed.type === "used" ? "used" : "new",
+      fieldsFound,
+      lowConfidence: fieldsFound === 0,
     };
   } catch {
     return {
@@ -56,6 +64,8 @@ function parseExtraction(raw: string): ExtractedFields {
       backGross: "",
       date: new Date().toISOString().split("T")[0]!,
       type: "new",
+      fieldsFound: 0,
+      lowConfidence: true,
     };
   }
 }
@@ -88,6 +98,8 @@ ocrRouter.post("/ocr", async (req, res) => {
           backGross: "",
           date: new Date().toISOString().split("T")[0]!,
           type: "new",
+          fieldsFound: 0,
+          lowConfidence: true,
         } satisfies ExtractedFields);
         return;
       }
