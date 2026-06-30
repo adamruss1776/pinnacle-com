@@ -33,14 +33,55 @@ export default function EarningsScreen() {
     projectedUnitCount,
     projectionReady,
     projectionHasLargeItem,
+    monthlyGoals,
   } = useData();
 
   const now = new Date();
   const dayOfMonth = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysLeft = daysInMonth - dayOfMonth;
   const pacePercent = Math.round((dayOfMonth / daysInMonth) * 100);
   const monthName = now.toLocaleDateString("en-US", { month: "long" });
   const year = now.getFullYear();
+
+  const unitGoal = monthlyGoals.unitGoal;
+  const commGoal = monthlyGoals.commissionGoal;
+
+  type GoalStatus = { msg: string; onTrack: boolean };
+
+  let unitStatus: GoalStatus | null = null;
+  if (unitGoal > 0) {
+    if (mtdDealCount >= unitGoal) {
+      unitStatus = { msg: `${unitGoal}-unit goal reached — great month!`, onTrack: true };
+    } else if (projectionReady && Math.round(projectedUnitCount) >= unitGoal) {
+      unitStatus = { msg: `On pace to hit your ${unitGoal}-unit goal`, onTrack: true };
+    } else if (!projectionReady) {
+      unitStatus = { msg: `${mtdDealCount} of ${unitGoal} units so far`, onTrack: true };
+    } else {
+      const needed = unitGoal - mtdDealCount;
+      unitStatus = {
+        msg: `Pick up the pace — ${needed} unit${needed !== 1 ? "s" : ""} to go with ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`,
+        onTrack: false,
+      };
+    }
+  }
+
+  let commStatus: GoalStatus | null = null;
+  if (commGoal > 0) {
+    if (mtdCommission >= commGoal) {
+      commStatus = { msg: `${formatCurrency(commGoal)} goal reached — great month!`, onTrack: true };
+    } else if (projectionReady && projectedMonthEnd >= commGoal) {
+      commStatus = { msg: `On pace to hit your ${formatCurrency(commGoal)} goal`, onTrack: true };
+    } else if (!projectionReady) {
+      commStatus = { msg: `${formatCurrency(mtdCommission)} of ${formatCurrency(commGoal)} so far`, onTrack: true };
+    } else {
+      const gap = commGoal - mtdCommission;
+      commStatus = {
+        msg: `Pick up the pace — ${formatCurrency(gap)} to go with ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`,
+        onTrack: false,
+      };
+    }
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -205,6 +246,30 @@ export default function EarningsScreen() {
               </Text>
             </View>
           )}
+          {unitStatus && (
+            <View style={[
+              styles.goalPill,
+              unitStatus.onTrack
+                ? { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }
+                : { backgroundColor: "#2d1f00", borderColor: "#7c4f00" },
+            ]}>
+              <Text style={[styles.goalPillText, { color: unitStatus.onTrack ? colors.green : colors.amber, fontFamily: "Inter_400Regular" }]}>
+                {unitStatus.msg}
+              </Text>
+            </View>
+          )}
+          {commStatus && (
+            <View style={[
+              styles.goalPill,
+              commStatus.onTrack
+                ? { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }
+                : { backgroundColor: "#2d1f00", borderColor: "#7c4f00" },
+            ]}>
+              <Text style={[styles.goalPillText, { color: commStatus.onTrack ? colors.green : colors.amber, fontFamily: "Inter_400Regular" }]}>
+                {commStatus.msg}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Import Button */}
@@ -343,6 +408,13 @@ const styles = StyleSheet.create({
   paceFill: { height: 6, borderRadius: 3 },
   paceSub: { fontSize: 12 },
   unitProj: { fontSize: 11, marginTop: 2 },
+  goalPill: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  goalPillText: { fontSize: 12, lineHeight: 16 },
   largeItemWarning: {
     flexDirection: "row",
     alignItems: "center",

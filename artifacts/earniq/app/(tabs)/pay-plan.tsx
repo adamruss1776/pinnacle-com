@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CommissionPreview } from "@/components/CommissionPreview";
 import { CustomSlider } from "@/components/CustomSlider";
-import { DEFAULT_PAY_PLAN, type PayPlan, useData } from "@/context/DataContext";
+import { DEFAULT_GOALS, DEFAULT_PAY_PLAN, type MonthlyGoals, type PayPlan, useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 import { calcCommission } from "@/utils/commission";
 import { exportDataAsCsv } from "@/utils/exportData";
@@ -25,9 +25,10 @@ import { exportDataAsCsv } from "@/utils/exportData";
 export default function PayPlanScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { payPlan, updatePayPlan, deals, spiffs } = useData();
+  const { payPlan, updatePayPlan, monthlyGoals, updateGoals, deals, spiffs } = useData();
 
   const [localPlan, setLocalPlan] = useState<PayPlan>(payPlan);
+  const [localGoals, setLocalGoals] = useState<MonthlyGoals>(monthlyGoals);
   const [calcFrontGross, setCalcFrontGross] = useState("");
   const [calcBackGross, setCalcBackGross] = useState("");
   const [calcType, setCalcType] = useState<"new" | "used">("new");
@@ -42,6 +43,7 @@ export default function PayPlanScreen() {
   function handleSave() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     updatePayPlan(localPlan);
+    updateGoals(localGoals);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -239,6 +241,60 @@ export default function PayPlanScreen() {
             </View>
           </View>
 
+          {/* Monthly Goals */}
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold", marginBottom: 4 }]}>
+              Monthly Goals
+            </Text>
+            <Text style={[styles.goalSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Track your progress on the Earnings screen
+            </Text>
+            <View style={styles.goalRow}>
+              <Text style={[styles.goalLabel, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+                Unit Goal
+              </Text>
+              <View style={[styles.goalInput, { backgroundColor: colors.input, borderColor: colors.border }]}>
+                <TextInput
+                  value={localGoals.unitGoal > 0 ? String(localGoals.unitGoal) : ""}
+                  onChangeText={(t) => {
+                    const n = parseInt(t, 10);
+                    setLocalGoals((prev) => ({ ...prev, unitGoal: isNaN(n) || n < 0 ? 0 : n }));
+                    setSaved(false);
+                  }}
+                  keyboardType="number-pad"
+                  placeholder="e.g. 20"
+                  placeholderTextColor={colors.mutedForeground}
+                  style={[styles.goalInputText, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
+                />
+                <Text style={[styles.goalInputSuffix, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  units
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.goalRow, { marginBottom: 0 }]}>
+              <Text style={[styles.goalLabel, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+                Commission Goal
+              </Text>
+              <View style={[styles.goalInput, { backgroundColor: colors.input, borderColor: colors.border }]}>
+                <Text style={[styles.goalInputPrefix, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  $
+                </Text>
+                <TextInput
+                  value={localGoals.commissionGoal > 0 ? String(localGoals.commissionGoal) : ""}
+                  onChangeText={(t) => {
+                    const n = parseFloat(t);
+                    setLocalGoals((prev) => ({ ...prev, commissionGoal: isNaN(n) || n < 0 ? 0 : n }));
+                    setSaved(false);
+                  }}
+                  keyboardType="numeric"
+                  placeholder="e.g. 8000"
+                  placeholderTextColor={colors.mutedForeground}
+                  style={[styles.goalInputText, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
+                />
+              </View>
+            </View>
+          </View>
+
           {/* Reset */}
           <TouchableOpacity onPress={handleReset} style={styles.resetBtn}>
             <Text style={[styles.resetText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
@@ -393,6 +449,21 @@ const styles = StyleSheet.create({
   },
   toggleTitle: { fontSize: 16, marginBottom: 2 },
   toggleSubtitle: { fontSize: 13, maxWidth: "80%" },
+  goalSubtitle: { fontSize: 12, marginBottom: 14 },
+  goalRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  goalLabel: { fontSize: 14, flex: 1 },
+  goalInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minWidth: 130,
+  },
+  goalInputPrefix: { fontSize: 15, marginRight: 4 },
+  goalInputSuffix: { fontSize: 13, marginLeft: 6 },
+  goalInputText: { fontSize: 15, minWidth: 60 },
   resetBtn: { alignItems: "center", paddingVertical: 4 },
   resetText: { fontSize: 14 },
   exportBtn: {

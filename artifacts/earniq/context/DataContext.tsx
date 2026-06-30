@@ -51,6 +51,16 @@ export const DEFAULT_PAY_PLAN: PayPlan = {
   enforceCaps: true,
 };
 
+export interface MonthlyGoals {
+  unitGoal: number;
+  commissionGoal: number;
+}
+
+export const DEFAULT_GOALS: MonthlyGoals = {
+  unitGoal: 0,
+  commissionGoal: 0,
+};
+
 export interface MonthlyDataPoint {
   label: string;
   total: number;
@@ -70,6 +80,8 @@ interface DataContextValue {
   updateSpiff: (id: string, spiff: Omit<Spiff, "id" | "createdAt">) => void;
   deleteSpiff: (id: string) => void;
   updatePayPlan: (plan: PayPlan) => void;
+  monthlyGoals: MonthlyGoals;
+  updateGoals: (goals: MonthlyGoals) => void;
   mtdCommission: number;
   mtdDealCount: number;
   ytdCommission: number;
@@ -85,6 +97,7 @@ interface DataContextValue {
 const DEALS_KEY = "@earniq_deals";
 const SPIFFS_KEY = "@earniq_spiffs";
 const PAYPLAN_KEY = "@earniq_payplan";
+const GOALS_KEY = "@earniq_goals";
 
 const DataContext = createContext<DataContextValue | null>(null);
 
@@ -92,19 +105,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [spiffs, setSpiffs] = useState<Spiff[]>([]);
   const [payPlan, setPayPlan] = useState<PayPlan>(DEFAULT_PAY_PLAN);
+  const [monthlyGoals, setMonthlyGoals] = useState<MonthlyGoals>(DEFAULT_GOALS);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [dealsRaw, spiffsRaw, planRaw] = await Promise.all([
+        const [dealsRaw, spiffsRaw, planRaw, goalsRaw] = await Promise.all([
           AsyncStorage.getItem(DEALS_KEY),
           AsyncStorage.getItem(SPIFFS_KEY),
           AsyncStorage.getItem(PAYPLAN_KEY),
+          AsyncStorage.getItem(GOALS_KEY),
         ]);
         if (dealsRaw) setDeals(JSON.parse(dealsRaw));
         if (spiffsRaw) setSpiffs(JSON.parse(spiffsRaw));
         if (planRaw) setPayPlan(JSON.parse(planRaw));
+        if (goalsRaw) setMonthlyGoals(JSON.parse(goalsRaw));
       } catch (e) {
         console.error("Failed to load data", e);
       } finally {
@@ -134,6 +150,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to save pay plan", e)
     );
   }, [payPlan, isLoading]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    AsyncStorage.setItem(GOALS_KEY, JSON.stringify(monthlyGoals)).catch((e) =>
+      console.error("Failed to save goals", e)
+    );
+  }, [monthlyGoals, isLoading]);
 
   const addDeal = useCallback(
     (dealData: Omit<Deal, "id" | "createdAt" | "commission" | "isCapped">) => {
@@ -204,6 +227,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const updatePayPlan = useCallback((plan: PayPlan) => {
     setPayPlan(plan);
+  }, []);
+
+  const updateGoals = useCallback((goals: MonthlyGoals) => {
+    setMonthlyGoals(goals);
   }, []);
 
   const mtdDeals = deals.filter((d) => isThisMonth(d.date));
@@ -296,6 +323,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateSpiff,
         deleteSpiff,
         updatePayPlan,
+        monthlyGoals,
+        updateGoals,
         mtdCommission,
         mtdDealCount: mtdDeals.length,
         ytdCommission,
