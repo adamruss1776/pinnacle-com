@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 import { buildPrefillParams } from "@/utils/prefill-params";
+import { resolveOcrDate } from "@/utils/ocr-date";
 
 type ImportStep = "choose" | "processing" | "review";
 
@@ -169,7 +170,7 @@ export default function ImportScreen() {
         vehicleName: data.vehicleName ?? "",
         frontGross: data.frontGross ?? "",
         backGross: data.backGross ?? "",
-        date: isLow ? "" : (data.date || new Date().toISOString().split("T")[0]!),
+        date: resolveOcrDate(data, new Date().toISOString().split("T")[0]!),
         type: data.type === "used" ? "used" : "new",
       });
       setStep("review");
@@ -214,7 +215,7 @@ export default function ImportScreen() {
         vehicleName: data.vehicleName ?? "",
         frontGross: data.frontGross ?? "",
         backGross: data.backGross ?? "",
-        date: isLow ? "" : (data.date || new Date().toISOString().split("T")[0]!),
+        date: resolveOcrDate(data, new Date().toISOString().split("T")[0]!),
         type: data.type === "used" ? "used" : "new",
       });
       setStep("review");
