@@ -37,7 +37,7 @@ export function readPrefillParams(
   today: string
 ): PrefillFormState {
   return {
-    date: params.prefillDate ?? today,
+    date: params.prefillDate || today,
     vehicleName: params.prefillVehicle ?? "",
     frontGross: params.prefillFront ?? "",
     backGross: params.prefillBack ?? "",

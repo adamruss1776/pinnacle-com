@@ -169,7 +169,7 @@ export default function ImportScreen() {
         vehicleName: data.vehicleName ?? "",
         frontGross: data.frontGross ?? "",
         backGross: data.backGross ?? "",
-        date: data.date || new Date().toISOString().split("T")[0]!,
+        date: isLow ? "" : (data.date || new Date().toISOString().split("T")[0]!),
         type: data.type === "used" ? "used" : "new",
       });
       setStep("review");
@@ -214,7 +214,7 @@ export default function ImportScreen() {
         vehicleName: data.vehicleName ?? "",
         frontGross: data.frontGross ?? "",
         backGross: data.backGross ?? "",
-        date: data.date || new Date().toISOString().split("T")[0]!,
+        date: isLow ? "" : (data.date || new Date().toISOString().split("T")[0]!),
         type: data.type === "used" ? "used" : "new",
       });
       setStep("review");
