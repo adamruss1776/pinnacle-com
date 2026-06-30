@@ -30,6 +30,7 @@ export default function EarningsScreen() {
     isLoading,
     monthlyCommissions,
     projectedMonthEnd,
+    projectedUnitCount,
     projectionReady,
     projectionHasLargeItem,
   } = useData();
@@ -166,6 +167,11 @@ export default function EarningsScreen() {
                 <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
                   {mtdDealCount}
                 </Text>
+                {projectionReady && (
+                  <Text style={[styles.unitProj, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                    ~{Math.round(projectedUnitCount)} projected
+                  </Text>
+                )}
               </View>
             </View>
             <View style={[styles.paceBadge, { backgroundColor: "#0d1f14" }]}>
@@ -336,6 +342,7 @@ const styles = StyleSheet.create({
   paceTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
   paceFill: { height: 6, borderRadius: 3 },
   paceSub: { fontSize: 12 },
+  unitProj: { fontSize: 11, marginTop: 2 },
   largeItemWarning: {
     flexDirection: "row",
     alignItems: "center",

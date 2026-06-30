@@ -77,6 +77,7 @@ interface DataContextValue {
   recentDeals: Deal[];
   monthlyCommissions: MonthlyDataPoint[];
   projectedMonthEnd: number;
+  projectedUnitCount: number;
   projectionReady: boolean;
   projectionHasLargeItem: boolean;
 }
@@ -252,7 +253,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const PROJECTION_MIN_DAY = 5;
   const LARGE_ITEM_THRESHOLD = 0.5;
 
-  const { projectedMonthEnd, projectionReady, projectionHasLargeItem } = useMemo(() => {
+  const { projectedMonthEnd, projectedUnitCount, projectionReady, projectionHasLargeItem } = useMemo(() => {
     const now = new Date();
     const dayOfMonth = now.getDate();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -276,6 +277,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return {
       projectionReady: ready,
       projectedMonthEnd: ready && fraction > 0 ? mtdCommission / fraction : 0,
+      projectedUnitCount: ready && fraction > 0 ? mtdDeals.length / fraction : 0,
       projectionHasLargeItem: hasLargeItem,
     };
   }, [mtdCommission, mtdDeals, mtdSpiffs]);
@@ -301,6 +303,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         recentDeals,
         monthlyCommissions,
         projectedMonthEnd,
+        projectedUnitCount,
         projectionReady,
         projectionHasLargeItem,
       }}
