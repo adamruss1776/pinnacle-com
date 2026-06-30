@@ -18,6 +18,7 @@ import { CommissionPreview } from "@/components/CommissionPreview";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 import { calcCommission } from "@/utils/commission";
+import { readPrefillParams } from "@/utils/prefill-params";
 
 const SPLITS = [
   { label: "None", value: 1 },
@@ -43,23 +44,19 @@ export default function LogDealScreen() {
   const existingDeal = editId ? deals.find((d) => d.id === editId) : undefined;
   const isEdit = !!existingDeal;
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
 
-  const [date, setDate] = useState(
-    existingDeal?.date ?? params.prefillDate ?? today
-  );
-  const [vehicleName, setVehicleName] = useState(
-    existingDeal?.vehicleName ?? params.prefillVehicle ?? ""
-  );
+  const prefill = readPrefillParams(params, today);
+
+  const [date, setDate] = useState(existingDeal?.date ?? prefill.date);
+  const [vehicleName, setVehicleName] = useState(existingDeal?.vehicleName ?? prefill.vehicleName);
   const [stockNumber, setStockNumber] = useState(existingDeal?.stockNumber ?? "");
-  const [type, setType] = useState<"new" | "used">(
-    existingDeal?.type ?? (params.prefillType as "new" | "used") ?? "new"
-  );
+  const [type, setType] = useState<"new" | "used">(existingDeal?.type ?? prefill.type);
   const [frontGross, setFrontGross] = useState(
-    existingDeal != null ? String(existingDeal.frontGross) : (params.prefillFront ?? "")
+    existingDeal != null ? String(existingDeal.frontGross) : prefill.frontGross
   );
   const [backGross, setBackGross] = useState(
-    existingDeal != null ? String(existingDeal.backGross) : (params.prefillBack ?? "")
+    existingDeal != null ? String(existingDeal.backGross) : prefill.backGross
   );
   const [split, setSplit] = useState(existingDeal?.split ?? 1);
   const [partnerName, setPartnerName] = useState(existingDeal?.partnerName ?? "");

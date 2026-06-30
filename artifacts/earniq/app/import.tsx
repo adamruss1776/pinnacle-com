@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
+import { buildPrefillParams } from "@/utils/prefill-params";
 
 type ImportStep = "choose" | "processing" | "review";
 
@@ -235,13 +236,7 @@ export default function ImportScreen() {
   function handleContinue() {
     router.replace({
       pathname: "/log-deal",
-      params: {
-        prefillDate: extracted.date,
-        prefillVehicle: extracted.vehicleName,
-        prefillFront: extracted.frontGross,
-        prefillBack: extracted.backGross,
-        prefillType: extracted.type,
-      },
+      params: buildPrefillParams(extracted),
     });
   }
 
