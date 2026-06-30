@@ -112,6 +112,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     load();
   }, []);
 
+  useEffect(() => {
+    if (isLoading) return;
+    AsyncStorage.setItem(DEALS_KEY, JSON.stringify(deals)).catch((e) =>
+      console.error("Failed to save deals", e)
+    );
+  }, [deals, isLoading]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(spiffs)).catch((e) =>
+      console.error("Failed to save spiffs", e)
+    );
+  }, [spiffs, isLoading]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    AsyncStorage.setItem(PAYPLAN_KEY, JSON.stringify(payPlan)).catch((e) =>
+      console.error("Failed to save pay plan", e)
+    );
+  }, [payPlan, isLoading]);
+
   const addDeal = useCallback(
     (dealData: Omit<Deal, "id" | "createdAt" | "commission" | "isCapped">) => {
       const result = calcCommission(
@@ -128,11 +149,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         commission: result.commission,
         isCapped: result.isCapped,
       };
-      setDeals((prev) => {
-        const updated = [newDeal, ...prev];
-        AsyncStorage.setItem(DEALS_KEY, JSON.stringify(updated));
-        return updated;
-      });
+      setDeals((prev) => [newDeal, ...prev]);
     },
     [payPlan]
   );
@@ -146,25 +163,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         dealData.split,
         payPlan
       );
-      setDeals((prev) => {
-        const updated = prev.map((d) =>
+      setDeals((prev) =>
+        prev.map((d) =>
           d.id === id
             ? { ...d, ...dealData, commission: result.commission, isCapped: result.isCapped }
             : d
-        );
-        AsyncStorage.setItem(DEALS_KEY, JSON.stringify(updated));
-        return updated;
-      });
+        )
+      );
     },
     [payPlan]
   );
 
   const deleteDeal = useCallback((id: string) => {
-    setDeals((prev) => {
-      const updated = prev.filter((d) => d.id !== id);
-      AsyncStorage.setItem(DEALS_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    setDeals((prev) => prev.filter((d) => d.id !== id));
   }, []);
 
   const addSpiff = useCallback(
@@ -174,36 +185,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         id: generateId(),
         createdAt: new Date().toISOString(),
       };
-      setSpiffs((prev) => {
-        const updated = [newSpiff, ...prev];
-        AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(updated));
-        return updated;
-      });
+      setSpiffs((prev) => [newSpiff, ...prev]);
     },
     []
   );
 
   const updateSpiff = useCallback((id: string, spiffData: Omit<Spiff, "id" | "createdAt">) => {
-    setSpiffs((prev) => {
-      const updated = prev.map((s) =>
-        s.id === id ? { ...s, ...spiffData } : s
-      );
-      AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    setSpiffs((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...spiffData } : s))
+    );
   }, []);
 
   const deleteSpiff = useCallback((id: string) => {
-    setSpiffs((prev) => {
-      const updated = prev.filter((s) => s.id !== id);
-      AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    setSpiffs((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
   const updatePayPlan = useCallback((plan: PayPlan) => {
     setPayPlan(plan);
-    AsyncStorage.setItem(PAYPLAN_KEY, JSON.stringify(plan));
   }, []);
 
   const mtdDeals = deals.filter((d) => isThisMonth(d.date));
