@@ -71,6 +71,7 @@ interface DataContextValue {
   deleteSpiff: (id: string) => void;
   updatePayPlan: (plan: PayPlan) => void;
   mtdCommission: number;
+  mtdDealCount: number;
   ytdCommission: number;
   avgCommissionPerDeal: number;
   recentDeals: Deal[];
@@ -294,6 +295,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         deleteSpiff,
         updatePayPlan,
         mtdCommission,
+        mtdDealCount: mtdDeals.length,
         ytdCommission,
         avgCommissionPerDeal,
         recentDeals,

@@ -23,6 +23,7 @@ export default function EarningsScreen() {
   const insets = useSafeAreaInsets();
   const {
     mtdCommission,
+    mtdDealCount,
     ytdCommission,
     avgCommissionPerDeal,
     recentDeals,
@@ -142,19 +143,30 @@ export default function EarningsScreen() {
         {/* Pace Indicator */}
         <View style={[styles.paceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.paceHeader}>
-            <View style={{ flex: 1, marginRight: 12 }}>
-              <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                Projected Month-End
-              </Text>
-              {projectionReady ? (
+            <View style={styles.paceStats}>
+              <View style={styles.paceStat}>
+                <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  Projected Month-End
+                </Text>
+                {projectionReady ? (
+                  <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                    {formatCurrency(projectedMonthEnd)}
+                  </Text>
+                ) : (
+                  <Text style={[styles.paceValue, { color: colors.mutedForeground, fontFamily: "Inter_700Bold" }]}>
+                    —
+                  </Text>
+                )}
+              </View>
+              <View style={[styles.paceDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.paceStat}>
+                <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  Units This Month
+                </Text>
                 <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                  {formatCurrency(projectedMonthEnd)}
+                  {mtdDealCount}
                 </Text>
-              ) : (
-                <Text style={[styles.paceValue, { color: colors.mutedForeground, fontFamily: "Inter_700Bold" }]}>
-                  —
-                </Text>
-              )}
+              </View>
             </View>
             <View style={[styles.paceBadge, { backgroundColor: "#0d1f14" }]}>
               <Text style={[styles.paceBadgeText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
@@ -314,6 +326,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   paceHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  paceStats: { flex: 1, flexDirection: "row", alignItems: "flex-start", marginRight: 12 },
+  paceStat: { flex: 1 },
+  paceDivider: { width: 1, alignSelf: "stretch", marginHorizontal: 12, marginVertical: 2 },
   paceLabel: { fontSize: 12, marginBottom: 2 },
   paceValue: { fontSize: 20 },
   paceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
