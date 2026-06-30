@@ -4,7 +4,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -90,6 +90,7 @@ export default function ImportScreen() {
   const [sourceType, setSourceType] = useState<"photo" | "pdf" | null>(null);
   const [ocrError, setOcrError] = useState<string | null>(null);
   const [lowConfidence, setLowConfidence] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [extracted, setExtracted] = useState<ExtractedFields>({
     vehicleName: "",
@@ -144,10 +145,23 @@ export default function ImportScreen() {
     }
   }
 
+  const userCancelledRef = useRef(false);
+
+  function handleCancel() {
+    userCancelledRef.current = true;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setStep("choose");
+  }
+
   async function processImage(uri: string, mimeType: string) {
     setStep("processing");
     setOcrError(null);
     setLowConfidence(false);
+    userCancelledRef.current = false;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: "base64",
@@ -157,6 +171,7 @@ export default function ImportScreen() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, mimeType }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -164,6 +179,7 @@ export default function ImportScreen() {
       }
 
       const data = (await response.json()) as ExtractedFields;
+      clearTimeout(timeoutId);
       const isLow = data.lowConfidence ?? (!data.vehicleName && !data.frontGross && !data.backGross);
       setLowConfidence(isLow);
       setExtracted({
@@ -175,6 +191,8 @@ export default function ImportScreen() {
       });
       setStep("review");
     } catch (err) {
+      clearTimeout(timeoutId);
+      if (userCancelledRef.current) return;
       console.error("OCR failed:", err);
       setOcrError("Couldn't reach the server. Fill in the fields manually.");
       setLowConfidence(false);
@@ -193,6 +211,10 @@ export default function ImportScreen() {
     setStep("processing");
     setOcrError(null);
     setLowConfidence(false);
+    userCancelledRef.current = false;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: "base64",
@@ -202,6 +224,7 @@ export default function ImportScreen() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, mimeType: "application/pdf" }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -209,6 +232,7 @@ export default function ImportScreen() {
       }
 
       const data = (await response.json()) as ExtractedFields;
+      clearTimeout(timeoutId);
       const isLow = data.lowConfidence ?? (!data.vehicleName && !data.frontGross && !data.backGross);
       setLowConfidence(isLow);
       setExtracted({
@@ -220,6 +244,8 @@ export default function ImportScreen() {
       });
       setStep("review");
     } catch (err) {
+      clearTimeout(timeoutId);
+      if (userCancelledRef.current) return;
       console.error("PDF OCR failed:", err);
       setOcrError("Couldn't reach the server. Fill in the fields manually.");
       setLowConfidence(false);
@@ -347,6 +373,14 @@ export default function ImportScreen() {
             <Text style={[styles.processingDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               AI is extracting deal information from your {sourceType === "pdf" ? "PDF" : "image"}
             </Text>
+            <TouchableOpacity
+              style={[styles.cancelBtn, { borderColor: colors.border }]}
+              onPress={handleCancel}
+            >
+              <Text style={[styles.cancelBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -489,6 +523,8 @@ const styles = StyleSheet.create({
   processingStep: { alignItems: "center", gap: 16, paddingHorizontal: 40 },
   processingTitle: { fontSize: 20 },
   processingDesc: { fontSize: 14, textAlign: "center" },
+  cancelBtn: { marginTop: 8, paddingVertical: 10, paddingHorizontal: 28, borderRadius: 8, borderWidth: 1 },
+  cancelBtnText: { fontSize: 15 },
   reviewStep: { paddingHorizontal: 24, gap: 16 },
   reviewCard: {
     borderRadius: 14,
