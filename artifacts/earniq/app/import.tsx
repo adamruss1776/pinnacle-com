@@ -233,6 +233,8 @@ export default function ImportScreen() {
     }
   }
 
+  const missingCriticalCount = [extracted.vehicleName, extracted.frontGross].filter((v) => !v).length;
+
   function handleContinue() {
     router.replace({
       pathname: "/log-deal",
@@ -403,13 +405,26 @@ export default function ImportScreen() {
             )}
 
             <TouchableOpacity
-              style={[styles.continueBtn, { backgroundColor: colors.green }]}
+              style={[
+                styles.continueBtn,
+                { backgroundColor: colors.green },
+                missingCriticalCount > 0 && { opacity: 0.8 },
+              ]}
               onPress={handleContinue}
             >
-              <Text style={[styles.continueBtnText, { color: colors.primaryForeground, fontFamily: "Inter_700Bold" }]}>
-                {lowConfidence || ocrError ? "Fill In Manually" : "Review & Save Deal"}
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.primaryForeground} />
+              <View style={styles.continueBtnInner}>
+                <View style={styles.continueBtnRow}>
+                  <Text style={[styles.continueBtnText, { color: colors.primaryForeground, fontFamily: "Inter_700Bold" }]}>
+                    {lowConfidence || ocrError ? "Fill In Manually" : "Review & Save Deal"}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.primaryForeground} />
+                </View>
+                {missingCriticalCount > 0 && (
+                  <Text style={[styles.continueBtnSubtitle, { color: colors.primaryForeground, fontFamily: "Inter_400Regular" }]}>
+                    You'll need to fill in {missingCriticalCount} required {missingCriticalCount === 1 ? "field" : "fields"}
+                  </Text>
+                )}
+              </View>
             </TouchableOpacity>
 
             {(!lowConfidence && !ocrError) && (
@@ -504,7 +519,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     gap: 6,
   },
+  continueBtnInner: { alignItems: "center", gap: 2 },
+  continueBtnRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   continueBtnText: { fontSize: 17 },
+  continueBtnSubtitle: { fontSize: 12, opacity: 0.85 },
   retryBtn: { alignItems: "center" },
   retryText: { fontSize: 14 },
 });
