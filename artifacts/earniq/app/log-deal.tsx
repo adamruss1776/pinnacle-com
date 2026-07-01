@@ -20,6 +20,20 @@ import { useColors } from "@/hooks/useColors";
 import { calcCommission } from "@/utils/commission";
 import { readPrefillParams } from "@/utils/prefill-params";
 
+function toDisplayDate(yyyymmdd: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(yyyymmdd)) {
+    return `${yyyymmdd.slice(5, 7)}-${yyyymmdd.slice(8, 10)}-${yyyymmdd.slice(0, 4)}`;
+  }
+  return yyyymmdd;
+}
+
+function toStorageDate(input: string): string {
+  if (/^\d{2}-\d{2}-\d{4}$/.test(input)) {
+    return `${input.slice(6, 10)}-${input.slice(0, 2)}-${input.slice(3, 5)}`;
+  }
+  return input;
+}
+
 const SPLITS = [
   { label: "None", value: 1 },
   { label: "70%", value: 0.7 },
@@ -178,9 +192,9 @@ export default function LogDealScreen() {
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <FieldRow label="Date" colors={colors}>
               <TextInput
-                value={date}
-                onChangeText={setDate}
-                placeholder="e.g. 2026-07-01"
+                value={toDisplayDate(date)}
+                onChangeText={(t) => setDate(toStorageDate(t))}
+                placeholder="MM-DD-YYYY"
                 placeholderTextColor={colors.mutedForeground}
                 style={[styles.input, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
               />

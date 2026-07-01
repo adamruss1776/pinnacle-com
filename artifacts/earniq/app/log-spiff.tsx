@@ -17,6 +17,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 
+function toDisplayDate(yyyymmdd: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(yyyymmdd)) {
+    return `${yyyymmdd.slice(5, 7)}-${yyyymmdd.slice(8, 10)}-${yyyymmdd.slice(0, 4)}`;
+  }
+  return yyyymmdd;
+}
+
+function toStorageDate(input: string): string {
+  if (/^\d{2}-\d{2}-\d{4}$/.test(input)) {
+    return `${input.slice(6, 10)}-${input.slice(0, 2)}-${input.slice(3, 5)}`;
+  }
+  return input;
+}
+
 export default function LogSpiffScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -103,9 +117,9 @@ export default function LogSpiffScreen() {
                 Date
               </Text>
               <TextInput
-                value={date}
-                onChangeText={setDate}
-                placeholder="e.g. 2026-07-01"
+                value={toDisplayDate(date)}
+                onChangeText={(t) => setDate(toStorageDate(t))}
+                placeholder="MM-DD-YYYY"
                 placeholderTextColor={colors.mutedForeground}
                 style={[styles.input, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
               />

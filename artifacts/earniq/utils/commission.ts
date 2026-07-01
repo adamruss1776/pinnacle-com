@@ -46,13 +46,10 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const date = new Date(y!, m! - 1, d!);
-  return date.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const parts = dateStr.split("-");
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return dateStr;
+  const [y, m, d] = parts;
+  return `${m}-${d}-${y}`;
 }
 
 export function generateId(): string {
