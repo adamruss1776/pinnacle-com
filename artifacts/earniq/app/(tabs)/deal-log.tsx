@@ -219,8 +219,18 @@ export default function DealLogScreen() {
           <View style={styles.empty}>
             <Feather name="file-text" size={32} color={colors.mutedForeground} />
             <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              No deals for this period
+              {filter === "month"
+                ? `No deals logged this month yet`
+                : "No deals for this period"}
             </Text>
+            {filter === "month" && deals.length > 0 && (
+              <Text style={[styles.emptyHint, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Previous months are in{" "}
+                <Text style={{ fontFamily: "Inter_600SemiBold" }}>This Year</Text>
+                {" "}or{" "}
+                <Text style={{ fontFamily: "Inter_600SemiBold" }}>All Time</Text>
+              </Text>
+            )}
           </View>
         ) : (
           filteredDeals.map((deal) => (
@@ -236,8 +246,16 @@ export default function DealLogScreen() {
           <View style={styles.empty}>
             <Feather name="zap" size={32} color={colors.mutedForeground} />
             <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              No spiffs for this period
+              {filter === "month" ? "No spiffs logged this month yet" : "No spiffs for this period"}
             </Text>
+            {filter === "month" && spiffs.length > 0 && (
+              <Text style={[styles.emptyHint, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Previous months are in{" "}
+                <Text style={{ fontFamily: "Inter_600SemiBold" }}>This Year</Text>
+                {" "}or{" "}
+                <Text style={{ fontFamily: "Inter_600SemiBold" }}>All Time</Text>
+              </Text>
+            )}
           </View>
         ) : (
           filteredSpiffs.map((spiff) => (
@@ -316,4 +334,5 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
   empty: { alignItems: "center", paddingVertical: 24, gap: 8 },
   emptyText: { fontSize: 14 },
+  emptyHint: { fontSize: 13, textAlign: "center", opacity: 0.7, paddingHorizontal: 20 },
 });
