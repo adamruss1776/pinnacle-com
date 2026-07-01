@@ -66,7 +66,7 @@ export function LoginScreen({ onComplete }: Props) {
         {/* Brand */}
         <View style={styles.brand}>
           <Image
-            source={require("@/assets/images/logo.jpeg")}
+            source={require("@/assets/images/logo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -174,7 +174,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 200,
     height: 200,
-    borderRadius: 36,
   },
   tagline: {
     fontSize: 14,
