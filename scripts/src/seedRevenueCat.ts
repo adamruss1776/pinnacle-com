@@ -98,15 +98,20 @@ async function seedRevenueCat() {
   });
   if (listProjectsError) throw new Error("Failed to list projects");
 
-  const existingProject = existingProjects.items?.find((p) => p.name === PROJECT_NAME);
+  // Use existing project named PROJECT_NAME, or fall back to the first available project.
+  // Creating new projects requires elevated permissions not needed for seeding.
+  const existingProject =
+    existingProjects.items?.find((p) => p.name === PROJECT_NAME) ??
+    existingProjects.items?.[0];
+
   if (existingProject) {
-    console.log("Project already exists:", existingProject.id);
+    console.log(`Using project "${existingProject.name}" (${existingProject.id})`);
     project = existingProject;
   } else {
     const { data: newProject, error } = await createProject({ client, body: { name: PROJECT_NAME } });
     if (error) {
       console.error("Create project error:", JSON.stringify(error, null, 2));
-      throw new Error("Failed to create project");
+      throw new Error("Failed to create project — no existing projects found and cannot create one. Please create a project manually in the RevenueCat dashboard first.");
     }
     console.log("Created project:", newProject.id);
     project = newProject;
