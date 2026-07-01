@@ -16,7 +16,7 @@ import { useSubscription } from "@/lib/revenuecat";
 import { useColors } from "@/hooks/useColors";
 
 const MONTHLY_PRICE_DISPLAY = "$3.99/mo";
-const ANNUAL_PRICE_DISPLAY = "$49.99/yr";
+const ANNUAL_PRICE_DISPLAY = "$29.99/yr";
 
 const PRO_FEATURES = [
   { icon: "trending-up-outline" as const, text: "Projected month-end commission" },

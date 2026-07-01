@@ -1,12 +1,13 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
 import {
   Alert,
   Platform,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -93,7 +94,9 @@ export default function DealLogScreen() {
 
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const header = "Type,Date,Vehicle,Stock #,Deal Type,Front Gross,Back Gross,Commission,Split %,Partner,Notes\n";
-    const dealRows = filteredDeals
+    const sortedDeals = [...deals].sort((a, b) => b.date.localeCompare(a.date));
+    const sortedSpiffs = [...spiffs].sort((a, b) => b.date.localeCompare(a.date));
+    const dealRows = sortedDeals
       .map((d) =>
         [
           "Deal",
@@ -110,7 +113,7 @@ export default function DealLogScreen() {
         ].join(",")
       )
       .join("\n");
-    const spiffRows = filteredSpiffs
+    const spiffRows = sortedSpiffs
       .map((s) =>
         [
           "Spiff",
@@ -133,16 +136,30 @@ export default function DealLogScreen() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `earniq-deals-${filter}.csv`;
+      a.download = `earniq-deals-all-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       return;
     }
 
     try {
-      await Share.share({ message: csv, title: "EarnIQ Deals Export" });
+      const fileName = `earniq-deals-all-${new Date().toISOString().slice(0, 10)}.csv`;
+      const fileUri = FileSystem.cacheDirectory + fileName;
+      await FileSystem.writeAsStringAsync(fileUri, csv, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Alert.alert("Sharing unavailable", "Your device does not support file sharing.");
+        return;
+      }
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "text/csv",
+        dialogTitle: "Export Deal History",
+        UTI: "public.comma-separated-values-text",
+      });
     } catch {
-      Alert.alert("Export failed", "Could not share the CSV. Please try again.");
+      Alert.alert("Export failed", "Could not export the CSV. Please try again.");
     }
   }
 

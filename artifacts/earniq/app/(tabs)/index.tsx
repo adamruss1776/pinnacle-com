@@ -455,14 +455,14 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
   appName: { fontSize: 32 },
   period: { fontSize: 14, marginTop: 2 },
-  headerActions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
+  headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
   proBadgeBtn: {
     flexDirection: "row",
     alignItems: "center",
