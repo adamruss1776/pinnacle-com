@@ -508,6 +508,7 @@ export default function ImportScreen() {
                   <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
                   <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} onEdit={() => openEdit("backGross")} />
                   <FieldStatus label="Date" value={extracted.date} colors={colors} onEdit={() => openEdit("date")} />
+                  <FieldStatus label="Deal Type" value={extracted.type === "used" ? "Used" : "New"} colors={colors} onEdit={() => openEdit("type")} />
                 </View>
               </View>
             ) : lowConfidence ? (
@@ -524,6 +525,7 @@ export default function ImportScreen() {
                   <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
                   <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} onEdit={() => openEdit("backGross")} />
                   <FieldStatus label="Date" value={extracted.date} colors={colors} onEdit={() => openEdit("date")} />
+                  <FieldStatus label="Deal Type" value={extracted.type === "used" ? "Used" : "New"} colors={colors} onEdit={() => openEdit("type")} />
                 </View>
               </View>
             ) : (
@@ -537,6 +539,7 @@ export default function ImportScreen() {
                   <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
                   <FieldStatus label="Back Gross" value={extracted.backGross} prefix="$" colors={colors} onEdit={() => openEdit("backGross")} />
                   <FieldStatus label="Date" value={extracted.date} colors={colors} onEdit={() => openEdit("date")} />
+                  <FieldStatus label="Deal Type" value={extracted.type === "used" ? "Used" : "New"} colors={colors} onEdit={() => openEdit("type")} />
                 </View>
               </View>
             )}
