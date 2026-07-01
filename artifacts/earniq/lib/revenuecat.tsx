@@ -1,8 +1,11 @@
-import React, { createContext, useContext } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import Purchases from "react-native-purchases";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
+
+import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 
 const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
 const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
@@ -74,13 +77,13 @@ function useSubscriptionContext() {
     onSuccess: () => customerInfoQuery.refetch(),
   });
 
-  const isSubscribed =
+  const rcSubscribed =
     customerInfoQuery.data?.entitlements.active?.[REVENUECAT_ENTITLEMENT_IDENTIFIER] !== undefined;
 
   return {
     customerInfo: customerInfoQuery.data,
     offerings: offeringsQuery.data,
-    isSubscribed,
+    rcSubscribed,
     isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
     purchase: purchaseMutation.mutateAsync,
     restore: restoreMutation.mutateAsync,
@@ -90,12 +93,27 @@ function useSubscriptionContext() {
   };
 }
 
-type SubscriptionContextValue = ReturnType<typeof useSubscriptionContext>;
+type SubscriptionContextValue = ReturnType<typeof useSubscriptionContext> & {
+  isSubscribed: boolean;
+};
 const Context = createContext<SubscriptionContextValue | null>(null);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const value = useSubscriptionContext();
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(DEMO_MODE_KEY).then((val) => {
+      setIsDemoMode(val === "1");
+    });
+  }, []);
+
+  const combined: SubscriptionContextValue = {
+    ...value,
+    isSubscribed: isDemoMode || value.rcSubscribed,
+  };
+
+  return <Context.Provider value={combined}>{children}</Context.Provider>;
 }
 
 export function useSubscription() {

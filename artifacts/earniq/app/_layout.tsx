@@ -16,8 +16,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LoginScreen } from "@/components/LoginScreen";
 import { Onboarding } from "@/components/Onboarding";
 import { DataProvider } from "@/context/DataContext";
+import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 
 try {
@@ -28,6 +30,7 @@ try {
 
 const queryClient = new QueryClient();
 
+const LOGIN_DONE_KEY = "@earniq_login_done";
 const ONBOARDING_KEY = "@earniq_onboarded";
 
 SplashScreen.preventAutoHideAsync();
@@ -64,31 +67,21 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
-
+function MainAppLayout() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
-      setShowOnboarding(!val);
+    Promise.all([
+      AsyncStorage.getItem(ONBOARDING_KEY),
+      AsyncStorage.getItem(DEMO_MODE_KEY),
+    ]).then(([onboarded, demo]) => {
+      setShowOnboarding(!onboarded && demo !== "1");
       setOnboardingChecked(true);
     });
   }, []);
 
-  useEffect(() => {
-    if ((fontsLoaded || fontError) && onboardingChecked) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError, onboardingChecked]);
-
-  if ((!fontsLoaded && !fontError) || !onboardingChecked) return null;
+  if (!onboardingChecked) return null;
 
   async function handleOnboardingComplete(goToPayPlan: boolean) {
     await AsyncStorage.setItem(ONBOARDING_KEY, "1");
@@ -118,4 +111,44 @@ export default function RootLayout() {
       </SafeAreaProvider>
     </QueryClientProvider>
   );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  const [loginDone, setLoginDone] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem(LOGIN_DONE_KEY).then((val) => {
+      setLoginDone(!!val);
+    });
+  }, []);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && loginDone !== null) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError, loginDone]);
+
+  if ((!fontsLoaded && !fontError) || loginDone === null) return null;
+
+  if (!loginDone) {
+    return (
+      <SafeAreaProvider>
+        <LoginScreen
+          onComplete={async () => {
+            await AsyncStorage.setItem(LOGIN_DONE_KEY, "1");
+            setLoginDone(true);
+          }}
+        />
+      </SafeAreaProvider>
+    );
+  }
+
+  return <MainAppLayout />;
 }
