@@ -6,8 +6,8 @@ const monorepoRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch all files within the monorepo so Metro picks up workspace packages.
-config.watchFolders = [monorepoRoot];
+// Merge monorepo root into Expo's default watchFolders instead of replacing.
+config.watchFolders = [monorepoRoot, ...(config.watchFolders ?? [])];
 
 // Resolve packages from the app directory first, then fall back to the
 // monorepo root. This mirrors how pnpm hoists in the workspace.
