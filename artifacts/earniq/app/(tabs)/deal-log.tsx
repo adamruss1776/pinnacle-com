@@ -1,6 +1,8 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
 import {
   Alert,
@@ -82,6 +84,68 @@ export default function DealLogScreen() {
     ]);
   }
 
+  async function handleExportCSV() {
+    if (!isSubscribed) {
+      Haptics.selectionAsync();
+      setPaywallVisible(true);
+      return;
+    }
+    Haptics.selectionAsync();
+
+    const header = "Type,Date,Vehicle,Deal Type,Gross,Commission,Notes\n";
+    const dealRows = filteredDeals
+      .map((d) =>
+        [
+          "Deal",
+          d.date,
+          `"${(d.vehicle ?? "").replace(/"/g, '""')}"`,
+          d.dealType,
+          d.gross.toFixed(2),
+          d.commission.toFixed(2),
+          `"${(d.notes ?? "").replace(/"/g, '""')}"`,
+        ].join(",")
+      )
+      .join("\n");
+    const spiffRows = filteredSpiffs
+      .map((s) =>
+        [
+          "Spiff",
+          s.date,
+          `"${(s.description ?? "").replace(/"/g, '""')}"`,
+          "",
+          "",
+          s.amount.toFixed(2),
+          "",
+        ].join(",")
+      )
+      .join("\n");
+    const csv = header + dealRows + (dealRows && spiffRows ? "\n" : "") + spiffRows;
+
+    if (Platform.OS === "web") {
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `earniq-deals-${filter}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    try {
+      const path = `${FileSystem.cacheDirectory}earniq-deals-${filter}.csv`;
+      await FileSystem.writeAsStringAsync(path, csv, { encoding: FileSystem.EncodingType.UTF8 });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(path, { mimeType: "text/csv", dialogTitle: "Export Deals CSV" });
+      } else {
+        Alert.alert("Export unavailable", "Sharing is not available on this device.");
+      }
+    } catch {
+      Alert.alert("Export failed", "Could not create the CSV file. Please try again.");
+    }
+  }
+
   function handleFilterPress(value: FilterType) {
     if ((value === "year" || value === "all") && !isSubscribed) {
       Haptics.selectionAsync();
@@ -115,6 +179,15 @@ export default function DealLogScreen() {
           Deal Log
         </Text>
         <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.surface }]}
+            onPress={handleExportCSV}
+          >
+            <Feather name="download" size={18} color={isSubscribed ? colors.foreground : colors.mutedForeground} />
+            {!isSubscribed && (
+              <Ionicons name="lock-closed" size={9} color={colors.green} style={styles.lockBadge} />
+            )}
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.surface }]}
             onPress={() => {
@@ -314,6 +387,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  lockBadge: {
+    position: "absolute",
+    bottom: 6,
+    right: 5,
   },
   addBtn: {
     flexDirection: "row",

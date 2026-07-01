@@ -123,14 +123,24 @@ async function seedRevenueCat() {
     path: { project_id: project.id },
     query: { limit: 20 },
   });
-  if (listAppsError || !apps || apps.items.length === 0) throw new Error("No apps found");
+  if (listAppsError) throw new Error("Failed to list apps");
 
-  let testStoreApp: App | undefined = apps.items.find((a) => a.type === "test_store");
-  let appStoreApp: App | undefined = apps.items.find((a) => a.type === "app_store");
-  let playStoreApp: App | undefined = apps.items.find((a) => a.type === "play_store");
+  let testStoreApp: App | undefined = apps?.items.find((a) => a.type === "test_store");
+  let appStoreApp: App | undefined = apps?.items.find((a) => a.type === "app_store");
+  let playStoreApp: App | undefined = apps?.items.find((a) => a.type === "play_store");
 
-  if (!testStoreApp) throw new Error("No app with test store found");
-  console.log("Test store app found:", testStoreApp.id);
+  if (!testStoreApp) {
+    const { data: newTestApp, error } = await createApp({
+      client,
+      path: { project_id: project.id },
+      body: { name: "EarnIQ Test Store", type: "test_store" },
+    });
+    if (error) throw new Error("Failed to create test store app — ensure the project exists and the key has write access.");
+    testStoreApp = newTestApp;
+    console.log("Created test store app:", testStoreApp.id);
+  } else {
+    console.log("Test store app found:", testStoreApp.id);
+  }
 
   if (!appStoreApp) {
     const { data: newApp, error } = await createApp({
