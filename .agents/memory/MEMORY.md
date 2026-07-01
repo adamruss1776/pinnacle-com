@@ -1,0 +1,1 @@
+- [uuid ESM override](uuid-esm-override.md) — xcode@3 (expo prebuild) calls require('uuid'); root package.json pnpm.overrides is the authoritative pin, not pnpm-workspace.yaml
