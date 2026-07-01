@@ -20,7 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
-import { buildPrefillParams } from "@/utils/prefill-params";
+import { applyFieldEdit, buildPrefillParams } from "@/utils/prefill-params";
 import { resolveOcrDate } from "@/utils/ocr-date";
 
 type ImportStep = "choose" | "processing" | "review";
@@ -160,11 +160,7 @@ export default function ImportScreen() {
 
   function commitEdit() {
     if (!editingField) return;
-    if (editingField === "type") {
-      setExtracted((prev) => ({ ...prev, type: editValue === "used" ? "used" : "new" }));
-    } else {
-      setExtracted((prev) => ({ ...prev, [editingField]: editValue.trim() }));
-    }
+    setExtracted((prev) => applyFieldEdit(prev, editingField, editValue));
     setEditingField(null);
   }
 

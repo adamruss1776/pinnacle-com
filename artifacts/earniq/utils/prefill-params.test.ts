@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPrefillParams, readPrefillParams } from "./prefill-params.js";
+import { applyFieldEdit, buildPrefillParams, readPrefillParams } from "./prefill-params.js";
 import type { OcrExtractedFields, PrefillParams } from "./prefill-params.js";
 
 const TODAY = "2026-06-30";
@@ -116,6 +116,134 @@ describe("readPrefillParams — log-deal.tsx initial state", () => {
   it("reads 'used' type correctly", () => {
     const state = readPrefillParams({ prefillType: "used" }, TODAY);
     expect(state.type).toBe("used");
+  });
+});
+
+describe("inline edit → buildPrefillParams → readPrefillParams (import review screen)", () => {
+  it("vehicle edit: empty → filled value carries through to log-deal form", () => {
+    const initial: OcrExtractedFields = {
+      vehicleName: "",
+      frontGross: "1500",
+      backGross: "",
+      date: TODAY,
+      type: "new",
+    };
+
+    const afterEdit = applyFieldEdit(initial, "vehicleName", "2023 Toyota Camry");
+    const routerParams = buildPrefillParams(afterEdit);
+    const formState = readPrefillParams(routerParams, TODAY);
+
+    expect(formState.vehicleName).toBe("2023 Toyota Camry");
+    expect(formState.frontGross).toBe("1500");
+  });
+
+  it("frontGross edit: empty → filled value carries through to log-deal form", () => {
+    const initial: OcrExtractedFields = {
+      vehicleName: "2023 Honda Civic",
+      frontGross: "",
+      backGross: "",
+      date: TODAY,
+      type: "new",
+    };
+
+    const afterEdit = applyFieldEdit(initial, "frontGross", "2000");
+    const routerParams = buildPrefillParams(afterEdit);
+    const formState = readPrefillParams(routerParams, TODAY);
+
+    expect(formState.frontGross).toBe("2000");
+    expect(formState.vehicleName).toBe("2023 Honda Civic");
+  });
+
+  it("editing both required fields when both are empty carries both values through", () => {
+    const initial: OcrExtractedFields = {
+      vehicleName: "",
+      frontGross: "",
+      backGross: "",
+      date: TODAY,
+      type: "new",
+    };
+
+    const afterVehicle = applyFieldEdit(initial, "vehicleName", "2024 Ford F-150");
+    const afterFront = applyFieldEdit(afterVehicle, "frontGross", "3200");
+    const routerParams = buildPrefillParams(afterFront);
+    const formState = readPrefillParams(routerParams, TODAY);
+
+    expect(formState.vehicleName).toBe("2024 Ford F-150");
+    expect(formState.frontGross).toBe("3200");
+    expect(formState.backGross).toBe("");
+  });
+
+  it("applyFieldEdit trims whitespace from entered vehicle name before it reaches the form", () => {
+    const initial: OcrExtractedFields = {
+      vehicleName: "",
+      frontGross: "",
+      backGross: "",
+      date: TODAY,
+      type: "new",
+    };
+
+    const afterEdit = applyFieldEdit(initial, "vehicleName", "  2023 BMW 3 Series  ");
+    const routerParams = buildPrefillParams(afterEdit);
+    const formState = readPrefillParams(routerParams, TODAY);
+
+    expect(formState.vehicleName).toBe("2023 BMW 3 Series");
+  });
+
+  it("applyFieldEdit trims whitespace from entered frontGross before it reaches the form", () => {
+    const initial: OcrExtractedFields = {
+      vehicleName: "2022 Chevy Silverado",
+      frontGross: "",
+      backGross: "",
+      date: TODAY,
+      type: "new",
+    };
+
+    const afterEdit = applyFieldEdit(initial, "frontGross", "  1750  ");
+    const routerParams = buildPrefillParams(afterEdit);
+    const formState = readPrefillParams(routerParams, TODAY);
+
+    expect(formState.frontGross).toBe("1750");
+  });
+
+  it("editing a field does not corrupt other already-extracted fields", () => {
+    const initial: OcrExtractedFields = {
+      vehicleName: "",
+      frontGross: "2500",
+      backGross: "800",
+      date: "2026-05-01",
+      type: "used",
+    };
+
+    const afterEdit = applyFieldEdit(initial, "vehicleName", "2021 Kia Telluride");
+    const routerParams = buildPrefillParams(afterEdit);
+    const formState = readPrefillParams(routerParams, TODAY);
+
+    expect(formState.vehicleName).toBe("2021 Kia Telluride");
+    expect(formState.frontGross).toBe("2500");
+    expect(formState.backGross).toBe("800");
+    expect(formState.date).toBe("2026-05-01");
+    expect(formState.type).toBe("used");
+  });
+
+  it("multiple sequential edits: last write wins without losing earlier edits", () => {
+    let extracted: OcrExtractedFields = {
+      vehicleName: "",
+      frontGross: "",
+      backGross: "",
+      date: TODAY,
+      type: "new",
+    };
+
+    extracted = applyFieldEdit(extracted, "vehicleName", "2022 Ram 1500");
+    extracted = applyFieldEdit(extracted, "frontGross", "1800");
+    extracted = applyFieldEdit(extracted, "backGross", "600");
+    extracted = applyFieldEdit(extracted, "vehicleName", "2022 Ram 1500 TRX");
+
+    const formState = readPrefillParams(buildPrefillParams(extracted), TODAY);
+
+    expect(formState.vehicleName).toBe("2022 Ram 1500 TRX");
+    expect(formState.frontGross).toBe("1800");
+    expect(formState.backGross).toBe("600");
   });
 });
 

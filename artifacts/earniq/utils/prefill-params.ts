@@ -22,6 +22,23 @@ export type PrefillFormState = {
   type: "new" | "used";
 };
 
+export type EditableField = keyof OcrExtractedFields;
+
+/**
+ * Pure mutation used by import.tsx's commitEdit() — extracted here so tests
+ * can exercise the real production logic rather than reimplementing it.
+ */
+export function applyFieldEdit(
+  extracted: OcrExtractedFields,
+  field: EditableField,
+  value: string
+): OcrExtractedFields {
+  if (field === "type") {
+    return { ...extracted, type: value === "used" ? "used" : "new" };
+  }
+  return { ...extracted, [field]: value.trim() };
+}
+
 export function buildPrefillParams(extracted: OcrExtractedFields): PrefillParams {
   return {
     prefillDate: extracted.date,
