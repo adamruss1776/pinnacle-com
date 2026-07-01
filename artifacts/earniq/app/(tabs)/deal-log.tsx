@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
-  FlatList,
   Platform,
   ScrollView,
   StyleSheet,
@@ -15,9 +14,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DealCard } from "@/components/DealCard";
+import { PaywallModal } from "@/components/PaywallModal";
 import { SpiffCard } from "@/components/SpiffCard";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
+import { useSubscription } from "@/lib/revenuecat";
 import { formatCurrency, isThisMonth, isThisYear } from "@/utils/commission";
 
 type FilterType = "month" | "year" | "all";
@@ -26,7 +27,9 @@ export default function DealLogScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { deals, spiffs, deleteDeal, deleteSpiff } = useData();
+  const { isSubscribed } = useSubscription();
   const [filter, setFilter] = useState<FilterType>("month");
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const filteredDeals = deals.filter((d) => {
     if (filter === "month") return isThisMonth(d.date);
@@ -41,7 +44,7 @@ export default function DealLogScreen() {
   });
 
   const totalDealComm = filteredDeals.reduce((s, d) => s + d.commission, 0);
-  const totalSpiffs = filteredSpiffs.reduce((s, sp) => s + sp.amount, 0);
+  const totalSpiffs = filteredSpiffs.reduce((s, sp) => sp.amount + s, 0);
 
   function handleEditDeal(id: string) {
     router.push({ pathname: "/log-deal", params: { editId: id } });
@@ -79,6 +82,16 @@ export default function DealLogScreen() {
     ]);
   }
 
+  function handleFilterPress(value: FilterType) {
+    if ((value === "year" || value === "all") && !isSubscribed) {
+      Haptics.selectionAsync();
+      setPaywallVisible(true);
+      return;
+    }
+    Haptics.selectionAsync();
+    setFilter(value);
+  }
+
   const TABS: { label: string; value: FilterType }[] = [
     { label: "This Month", value: "month" },
     { label: "This Year", value: "year" },
@@ -104,9 +117,15 @@ export default function DealLogScreen() {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.surface }]}
-            onPress={() => router.push("/import")}
+            onPress={() => {
+              if (!isSubscribed) {
+                setPaywallVisible(true);
+                return;
+              }
+              router.push("/import");
+            }}
           >
-            <Feather name="upload" size={18} color={colors.foreground} />
+            <Feather name="upload" size={18} color={isSubscribed ? colors.foreground : colors.mutedForeground} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.addBtn, { backgroundColor: colors.green }]}
@@ -122,33 +141,41 @@ export default function DealLogScreen() {
 
       {/* Filter Tabs */}
       <View style={[styles.filterRow, { backgroundColor: colors.background }]}>
-        {TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.value}
-            style={[
-              styles.filterTab,
-              filter === tab.value
-                ? { backgroundColor: colors.green }
-                : { backgroundColor: colors.surface },
-            ]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setFilter(tab.value);
-            }}
-          >
-            <Text
+        {TABS.map((tab) => {
+          const isProLocked = (tab.value === "year" || tab.value === "all") && !isSubscribed;
+          const isActive = filter === tab.value;
+          return (
+            <TouchableOpacity
+              key={tab.value}
               style={[
-                styles.filterTabText,
-                {
-                  color: filter === tab.value ? colors.primaryForeground : colors.mutedForeground,
-                  fontFamily: "Inter_600SemiBold",
-                },
+                styles.filterTab,
+                isActive
+                  ? { backgroundColor: colors.green }
+                  : { backgroundColor: colors.surface },
               ]}
+              onPress={() => handleFilterPress(tab.value)}
             >
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.filterTabText,
+                  {
+                    color: isActive
+                      ? colors.primaryForeground
+                      : isProLocked
+                      ? colors.mutedForeground
+                      : colors.mutedForeground,
+                    fontFamily: "Inter_600SemiBold",
+                  },
+                ]}
+              >
+                {tab.label}
+              </Text>
+              {isProLocked && (
+                <Ionicons name="lock-closed" size={11} color={colors.green} style={{ marginLeft: 4 }} />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <ScrollView
@@ -263,6 +290,8 @@ export default function DealLogScreen() {
           ))
         )}
       </ScrollView>
+
+      <PaywallModal visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </View>
   );
 }
@@ -289,50 +318,52 @@ const styles = StyleSheet.create({
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 10,
-    gap: 4,
   },
-  addBtnText: { fontSize: 15 },
+  addBtnText: { fontSize: 14 },
   filterRow: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 10,
     gap: 8,
   },
   filterTab: {
     flex: 1,
-    paddingVertical: 7,
-    borderRadius: 8,
+    paddingVertical: 8,
+    borderRadius: 10,
     alignItems: "center",
-  },
-  filterTabText: { fontSize: 12 },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 8 },
-  summaryCard: {
     flexDirection: "row",
-    borderRadius: 12,
+    justifyContent: "center",
+  },
+  filterTabText: { fontSize: 13 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 8, gap: 12 },
+  summaryCard: {
+    borderRadius: 14,
     padding: 16,
-    marginBottom: 20,
     borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
   },
   summaryItem: { flex: 1, alignItems: "center" },
   summaryLabel: { fontSize: 12, marginBottom: 4 },
-  summaryValue: { fontSize: 16 },
-  divider: { width: 1, marginHorizontal: 8 },
-  statsRow: { flexDirection: "row", marginBottom: 4 },
+  summaryValue: { fontSize: 18 },
+  divider: { width: 1, height: 36 },
+  statsRow: { flexDirection: "row" },
   statCard: {
     flex: 1,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     borderWidth: 1,
     alignItems: "center",
   },
-  statLabel: { fontSize: 11, marginBottom: 4, textAlign: "center" },
-  statValue: { fontSize: 17 },
-  sectionTitle: { fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
+  statLabel: { fontSize: 12, marginBottom: 4, textAlign: "center" },
+  statValue: { fontSize: 20 },
+  sectionTitle: { fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8 },
   empty: { alignItems: "center", paddingVertical: 24, gap: 8 },
-  emptyText: { fontSize: 14 },
-  emptyHint: { fontSize: 13, textAlign: "center", opacity: 0.7, paddingHorizontal: 20 },
+  emptyText: { fontSize: 14, textAlign: "center" },
+  emptyHint: { fontSize: 12, textAlign: "center", lineHeight: 20 },
 });

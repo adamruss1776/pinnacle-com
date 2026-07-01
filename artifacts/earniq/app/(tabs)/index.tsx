@@ -1,7 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -14,13 +14,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DealCard } from "@/components/DealCard";
 import { MonthlyBarChart } from "@/components/MonthlyBarChart";
+import { PaywallModal } from "@/components/PaywallModal";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
+import { useSubscription } from "@/lib/revenuecat";
 import { formatCurrency } from "@/utils/commission";
 
 export default function EarningsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { isSubscribed } = useSubscription();
+  const [paywallVisible, setPaywallVisible] = useState(false);
+
   const {
     mtdCommission,
     mtdDealCount,
@@ -83,6 +88,11 @@ export default function EarningsScreen() {
     }
   }
 
+  function openPaywall() {
+    Haptics.selectionAsync();
+    setPaywallVisible(true);
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
@@ -104,6 +114,17 @@ export default function EarningsScreen() {
           </Text>
         </View>
         <View style={styles.headerActions}>
+          {!isSubscribed && (
+            <TouchableOpacity
+              style={[styles.proBadgeBtn, { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }]}
+              onPress={openPaywall}
+            >
+              <Ionicons name="star" size={12} color={colors.green} />
+              <Text style={[styles.proBadgeBtnText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
+                Go Pro
+              </Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => {
@@ -139,7 +160,7 @@ export default function EarningsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* MTD Total */}
+        {/* MTD Total — always visible */}
         <View style={[styles.mtdCard, { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }]}>
           <Text style={[styles.mtdLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             Month-to-Date
@@ -148,20 +169,38 @@ export default function EarningsScreen() {
             {formatCurrency(mtdCommission)}
           </Text>
           <Text style={[styles.mtdSub, { color: "#4ade80", fontFamily: "Inter_400Regular" }]}>
-            Deals + Spiffs
+            {mtdDealCount} deal{mtdDealCount !== 1 ? "s" : ""} + Spiffs
           </Text>
         </View>
 
-        {/* Stats Row */}
+        {/* Stats Row — YTD is Pro */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              YTD Total
-            </Text>
-            <Text style={[styles.statValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              {formatCurrency(ytdCommission)}
-            </Text>
-          </View>
+          {isSubscribed ? (
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                YTD Total
+              </Text>
+              <Text style={[styles.statValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {formatCurrency(ytdCommission)}
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.statCard, styles.lockedCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={openPaywall}
+              activeOpacity={0.8}
+            >
+              <View style={styles.lockedHeader}>
+                <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  YTD Total
+                </Text>
+                <View style={[styles.proPill, { backgroundColor: "#0d1f14" }]}>
+                  <Text style={[styles.proPillText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>PRO</Text>
+                </View>
+              </View>
+              <Ionicons name="lock-closed" size={20} color={colors.mutedForeground} style={{ marginTop: 4 }} />
+            </TouchableOpacity>
+          )}
           <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               Avg per Deal
@@ -172,129 +211,207 @@ export default function EarningsScreen() {
           </View>
         </View>
 
-        {/* Monthly Trend Chart */}
-        <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.chartTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Commission Trend
-          </Text>
-          <View style={styles.chartWrap}>
-            <MonthlyBarChart data={monthlyCommissions} height={100} />
+        {/* Monthly Trend Chart — Pro */}
+        {isSubscribed ? (
+          <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.chartTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+              Commission Trend
+            </Text>
+            <View style={styles.chartWrap}>
+              <MonthlyBarChart data={monthlyCommissions} height={100} />
+            </View>
           </View>
-        </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.chartCard, styles.lockedCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={openPaywall}
+            activeOpacity={0.8}
+          >
+            <View style={styles.lockedHeader}>
+              <Text style={[styles.chartTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+                Commission Trend
+              </Text>
+              <View style={[styles.proPill, { backgroundColor: "#0d1f14" }]}>
+                <Text style={[styles.proPillText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>PRO</Text>
+              </View>
+            </View>
+            <View style={[styles.lockedChartPlaceholder, { backgroundColor: colors.background }]}>
+              <Ionicons name="lock-closed" size={24} color={colors.mutedForeground} />
+              <Text style={[styles.lockedHint, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                6-month trend • Upgrade to unlock
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
-        {/* Pace Indicator */}
-        <View style={[styles.paceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.paceHeader}>
-            <View style={styles.paceStats}>
-              <View style={styles.paceStat}>
-                <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                  Projected Month-End
-                </Text>
-                {projectionReady ? (
+        {/* Pace / Projection Card — Pro */}
+        {isSubscribed ? (
+          <View style={[styles.paceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.paceHeader}>
+              <View style={styles.paceStats}>
+                <View style={styles.paceStat}>
+                  <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                    Projected Month-End
+                  </Text>
+                  {projectionReady ? (
+                    <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                      {formatCurrency(projectedMonthEnd)}
+                    </Text>
+                  ) : (
+                    <Text style={[styles.paceValue, { color: colors.mutedForeground, fontFamily: "Inter_700Bold" }]}>
+                      —
+                    </Text>
+                  )}
+                </View>
+                <View style={[styles.paceDivider, { backgroundColor: colors.border }]} />
+                <View style={styles.paceStat}>
+                  <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                    Units This Month
+                  </Text>
                   <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                    {formatCurrency(projectedMonthEnd)}
+                    {mtdDealCount}
                   </Text>
-                ) : (
-                  <Text style={[styles.paceValue, { color: colors.mutedForeground, fontFamily: "Inter_700Bold" }]}>
-                    —
-                  </Text>
-                )}
+                  {projectionReady && (
+                    <Text style={[styles.unitProj, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                      ~{Math.round(projectedUnitCount)} projected
+                    </Text>
+                  )}
+                </View>
               </View>
-              <View style={[styles.paceDivider, { backgroundColor: colors.border }]} />
-              <View style={styles.paceStat}>
-                <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                  Units This Month
+              <View style={[styles.paceBadge, { backgroundColor: "#0d1f14" }]}>
+                <Text style={[styles.paceBadgeText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
+                  Day {dayOfMonth}/{daysInMonth}
                 </Text>
-                <Text style={[styles.paceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                  {mtdDealCount}
-                </Text>
-                {projectionReady && (
-                  <Text style={[styles.unitProj, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                    ~{Math.round(projectedUnitCount)} projected
-                  </Text>
-                )}
               </View>
             </View>
-            <View style={[styles.paceBadge, { backgroundColor: "#0d1f14" }]}>
-              <Text style={[styles.paceBadgeText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
-                Day {dayOfMonth}/{daysInMonth}
-              </Text>
+            <View style={[styles.paceTrack, { backgroundColor: "#0d1f14" }]}>
+              <View
+                style={[
+                  styles.paceFill,
+                  { backgroundColor: colors.green, width: `${pacePercent}%` as any },
+                ]}
+              />
             </View>
+            {projectionReady ? (
+              <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {pacePercent}% of month elapsed
+              </Text>
+            ) : (
+              <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Projection available after day 5 — too early to estimate reliably
+              </Text>
+            )}
+            {projectionReady && projectionHasLargeItem && (
+              <View style={[styles.largeItemWarning, { backgroundColor: "#2d1f00", borderColor: "#7c4f00" }]}>
+                <Ionicons name="warning-outline" size={13} color={colors.amber} />
+                <Text style={[styles.largeItemWarningText, { color: colors.amber, fontFamily: "Inter_400Regular" }]}>
+                  Includes a large one-time item — projection may be elevated
+                </Text>
+              </View>
+            )}
+            {unitStatus && (
+              <View style={[
+                styles.goalPill,
+                unitStatus.onTrack
+                  ? { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }
+                  : { backgroundColor: "#2d1f00", borderColor: "#7c4f00" },
+              ]}>
+                <Text style={[styles.goalPillText, { color: unitStatus.onTrack ? colors.green : colors.amber, fontFamily: "Inter_400Regular" }]}>
+                  {unitStatus.msg}
+                </Text>
+              </View>
+            )}
+            {commStatus && (
+              <View style={[
+                styles.goalPill,
+                commStatus.onTrack
+                  ? { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }
+                  : { backgroundColor: "#2d1f00", borderColor: "#7c4f00" },
+              ]}>
+                <Text style={[styles.goalPillText, { color: commStatus.onTrack ? colors.green : colors.amber, fontFamily: "Inter_400Regular" }]}>
+                  {commStatus.msg}
+                </Text>
+              </View>
+            )}
           </View>
-          <View style={[styles.paceTrack, { backgroundColor: "#0d1f14" }]}>
-            <View
-              style={[
-                styles.paceFill,
-                { backgroundColor: colors.green, width: `${pacePercent}%` as any },
-              ]}
-            />
-          </View>
-          {projectionReady ? (
-            <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              {pacePercent}% of month elapsed
+        ) : (
+          <TouchableOpacity
+            style={[styles.paceCard, styles.lockedCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={openPaywall}
+            activeOpacity={0.8}
+          >
+            <View style={styles.lockedHeader}>
+              <Text style={[styles.paceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Projected Month-End
+              </Text>
+              <View style={[styles.proPill, { backgroundColor: "#0d1f14" }]}>
+                <Text style={[styles.proPillText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>PRO</Text>
+              </View>
+            </View>
+            <View style={styles.lockedPaceRow}>
+              <Ionicons name="lock-closed" size={22} color={colors.mutedForeground} />
+              <Text style={[styles.lockedHint, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Projection, goal tracking & pace alerts
+              </Text>
+            </View>
+            <View style={[styles.paceTrack, { backgroundColor: "#0d1f14", opacity: 0.4 }]}>
+              <View style={[styles.paceFill, { backgroundColor: colors.green, width: `${pacePercent}%` as any }]} />
+            </View>
+            <Text style={[styles.lockedUpgrade, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>
+              Tap to upgrade →
             </Text>
-          ) : (
-            <Text style={[styles.paceSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Projection available after day 5 — too early to estimate reliably
-            </Text>
-          )}
-          {projectionReady && projectionHasLargeItem && (
-            <View style={[styles.largeItemWarning, { backgroundColor: "#2d1f00", borderColor: "#7c4f00" }]}>
-              <Ionicons name="warning-outline" size={13} color={colors.amber} />
-              <Text style={[styles.largeItemWarningText, { color: colors.amber, fontFamily: "Inter_400Regular" }]}>
-                Includes a large one-time item — projection may be elevated
-              </Text>
-            </View>
-          )}
-          {unitStatus && (
-            <View style={[
-              styles.goalPill,
-              unitStatus.onTrack
-                ? { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }
-                : { backgroundColor: "#2d1f00", borderColor: "#7c4f00" },
-            ]}>
-              <Text style={[styles.goalPillText, { color: unitStatus.onTrack ? colors.green : colors.amber, fontFamily: "Inter_400Regular" }]}>
-                {unitStatus.msg}
-              </Text>
-            </View>
-          )}
-          {commStatus && (
-            <View style={[
-              styles.goalPill,
-              commStatus.onTrack
-                ? { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }
-                : { backgroundColor: "#2d1f00", borderColor: "#7c4f00" },
-            ]}>
-              <Text style={[styles.goalPillText, { color: commStatus.onTrack ? colors.green : colors.amber, fontFamily: "Inter_400Regular" }]}>
-                {commStatus.msg}
-              </Text>
-            </View>
-          )}
-        </View>
+          </TouchableOpacity>
+        )}
 
-        {/* Import Button */}
-        <TouchableOpacity
-          style={[styles.importBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.push("/import");
-          }}
-        >
-          <View style={[styles.importIconWrap, { backgroundColor: "#0d1f14" }]}>
-            <Feather name="upload" size={18} color={colors.green} />
-          </View>
-          <View style={styles.importText}>
-            <Text style={[styles.importTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-              Import Deal Sheet
-            </Text>
-            <Text style={[styles.importSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Photo or PDF upload
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        {/* OCR Import Button — Pro */}
+        {isSubscribed ? (
+          <TouchableOpacity
+            style={[styles.importBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/import");
+            }}
+          >
+            <View style={[styles.importIconWrap, { backgroundColor: "#0d1f14" }]}>
+              <Feather name="upload" size={18} color={colors.green} />
+            </View>
+            <View style={styles.importText}>
+              <Text style={[styles.importTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                Import Deal Sheet
+              </Text>
+              <Text style={[styles.importSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Photo or PDF upload
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.importBtn, styles.lockedCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={openPaywall}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.importIconWrap, { backgroundColor: colors.background }]}>
+              <Feather name="upload" size={18} color={colors.mutedForeground} />
+            </View>
+            <View style={styles.importText}>
+              <View style={styles.lockedHeader}>
+                <Text style={[styles.importTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+                  Import Deal Sheet
+                </Text>
+                <View style={[styles.proPill, { backgroundColor: "#0d1f14" }]}>
+                  <Text style={[styles.proPillText, { color: colors.green, fontFamily: "Inter_600SemiBold" }]}>PRO</Text>
+                </View>
+              </View>
+              <Text style={[styles.importSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                OCR scan • Upgrade to unlock
+              </Text>
+            </View>
+            <Ionicons name="lock-closed" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
 
-        {/* Recent Deals */}
+        {/* Recent Deals — always visible */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
             Recent Deals
@@ -328,6 +445,8 @@ export default function EarningsScreen() {
           recentDeals.map((deal) => <DealCard key={deal.id} deal={deal} />)
         )}
       </ScrollView>
+
+      <PaywallModal visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </View>
   );
 }
@@ -343,7 +462,17 @@ const styles = StyleSheet.create({
   },
   appName: { fontSize: 32 },
   period: { fontSize: 14, marginTop: 2 },
-  headerActions: { flexDirection: "row", gap: 8, marginTop: 8 },
+  headerActions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
+  proBadgeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  proBadgeBtnText: { fontSize: 12 },
   headerBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -375,6 +504,18 @@ const styles = StyleSheet.create({
   },
   statLabel: { fontSize: 12, marginBottom: 6, textAlign: "center" },
   statValue: { fontSize: 20 },
+  lockedCard: { opacity: 0.9 },
+  lockedHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" },
+  lockedPaceRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
+  lockedChartPlaceholder: { borderRadius: 10, padding: 24, alignItems: "center", gap: 8, marginTop: 4 },
+  lockedHint: { fontSize: 12 },
+  lockedUpgrade: { fontSize: 12, marginTop: 2 },
+  proPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  proPillText: { fontSize: 10 },
   importBtn: {
     flexDirection: "row",
     alignItems: "center",
