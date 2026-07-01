@@ -112,11 +112,9 @@ export default function EarningsScreen() {
           <Text style={[styles.period, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {monthName} {year}
           </Text>
-        </View>
-        <View style={styles.headerActions}>
           {!isSubscribed && (
             <TouchableOpacity
-              style={[styles.proBadgeBtn, { backgroundColor: "#0d1f14", borderColor: "#1a3d28" }]}
+              style={[styles.proBadgeBtn, { backgroundColor: "#0d1f14", borderColor: "#1a3d28", marginTop: 6, alignSelf: "flex-start" }]}
               onPress={openPaywall}
             >
               <Ionicons name="star" size={12} color={colors.green} />
@@ -125,6 +123,8 @@ export default function EarningsScreen() {
               </Text>
             </TouchableOpacity>
           )}
+        </View>
+        <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => {
