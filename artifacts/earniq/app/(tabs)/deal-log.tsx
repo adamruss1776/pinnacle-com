@@ -1,13 +1,12 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
 import {
   Alert,
   Platform,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -92,17 +91,22 @@ export default function DealLogScreen() {
     }
     Haptics.selectionAsync();
 
-    const header = "Type,Date,Vehicle,Deal Type,Gross,Commission,Notes\n";
+    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const header = "Type,Date,Vehicle,Stock #,Deal Type,Front Gross,Back Gross,Commission,Split %,Partner,Notes\n";
     const dealRows = filteredDeals
       .map((d) =>
         [
           "Deal",
           d.date,
-          `"${(d.vehicle ?? "").replace(/"/g, '""')}"`,
-          d.dealType,
-          d.gross.toFixed(2),
+          esc(d.vehicleName),
+          esc(d.stockNumber),
+          d.type,
+          d.frontGross.toFixed(2),
+          d.backGross.toFixed(2),
           d.commission.toFixed(2),
-          `"${(d.notes ?? "").replace(/"/g, '""')}"`,
+          d.split.toFixed(0),
+          esc(d.partnerName),
+          esc(d.notes),
         ].join(",")
       )
       .join("\n");
@@ -111,15 +115,18 @@ export default function DealLogScreen() {
         [
           "Spiff",
           s.date,
-          `"${(s.description ?? "").replace(/"/g, '""')}"`,
-          "",
-          "",
+          esc(s.description),
+          "", "", "", "",
           s.amount.toFixed(2),
-          "",
+          "", "", "",
         ].join(",")
       )
       .join("\n");
-    const csv = header + dealRows + (dealRows && spiffRows ? "\n" : "") + spiffRows;
+    const csv =
+      header +
+      dealRows +
+      (dealRows && spiffRows ? "\n" : "") +
+      spiffRows;
 
     if (Platform.OS === "web") {
       const blob = new Blob([csv], { type: "text/csv" });
@@ -133,16 +140,9 @@ export default function DealLogScreen() {
     }
 
     try {
-      const path = `${FileSystem.cacheDirectory}earniq-deals-${filter}.csv`;
-      await FileSystem.writeAsStringAsync(path, csv, { encoding: FileSystem.EncodingType.UTF8 });
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(path, { mimeType: "text/csv", dialogTitle: "Export Deals CSV" });
-      } else {
-        Alert.alert("Export unavailable", "Sharing is not available on this device.");
-      }
+      await Share.share({ message: csv, title: "EarnIQ Deals Export" });
     } catch {
-      Alert.alert("Export failed", "Could not create the CSV file. Please try again.");
+      Alert.alert("Export failed", "Could not share the CSV. Please try again.");
     }
   }
 
