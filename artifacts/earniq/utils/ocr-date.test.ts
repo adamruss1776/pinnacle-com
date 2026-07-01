@@ -55,4 +55,81 @@ describe("resolveOcrDate — date field resolution in processImage / processPDF"
 
     expect(date).toBe("");
   });
+
+  describe("dateCertain field", () => {
+    it("returns '' when dateCertain is false even though a date was extracted", () => {
+      const data = {
+        vehicleName: "2024 Toyota Camry",
+        frontGross: "1850",
+        backGross: "900",
+        date: "2026-06-15",
+        lowConfidence: false,
+        dateCertain: false,
+      };
+
+      const date = resolveOcrDate(data, TODAY);
+
+      expect(date).toBe("");
+    });
+
+    it("returns the extracted date when dateCertain is true", () => {
+      const data = {
+        vehicleName: "2024 Toyota Camry",
+        frontGross: "1850",
+        backGross: "900",
+        date: "2026-06-15",
+        lowConfidence: false,
+        dateCertain: true,
+      };
+
+      const date = resolveOcrDate(data, TODAY);
+
+      expect(date).toBe("2026-06-15");
+    });
+
+    it("returns '' when dateCertain is false and date is empty", () => {
+      const data = {
+        vehicleName: "2024 Toyota Camry",
+        frontGross: "1850",
+        backGross: "900",
+        date: "",
+        lowConfidence: false,
+        dateCertain: false,
+      };
+
+      const date = resolveOcrDate(data, TODAY);
+
+      expect(date).toBe("");
+    });
+
+    it("falls back to today when dateCertain is true but no date was extracted", () => {
+      const data = {
+        vehicleName: "2024 Toyota Camry",
+        frontGross: "1850",
+        backGross: "900",
+        date: "",
+        lowConfidence: false,
+        dateCertain: true,
+      };
+
+      const date = resolveOcrDate(data, TODAY);
+
+      expect(date).toBe(TODAY);
+    });
+
+    it("still returns '' when lowConfidence is true even if dateCertain is true", () => {
+      const data = {
+        vehicleName: "",
+        frontGross: "",
+        backGross: "",
+        date: "2026-06-15",
+        lowConfidence: true,
+        dateCertain: true,
+      };
+
+      const date = resolveOcrDate(data, TODAY);
+
+      expect(date).toBe("");
+    });
+  });
 });

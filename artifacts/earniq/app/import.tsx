@@ -33,6 +33,7 @@ type ExtractedFields = {
   type: "new" | "used";
   lowConfidence?: boolean;
   fieldsFound?: number;
+  dateCertain?: boolean;
 };
 
 type EditableField = "vehicleName" | "frontGross" | "backGross" | "date" | "type";

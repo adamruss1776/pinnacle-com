@@ -17,11 +17,12 @@ Fields to extract:
 - vehicleName: year, make, model (e.g. "2024 Toyota Camry"). Empty string if not found.
 - frontGross: front-end gross profit as a numeric string without $ or commas (e.g. "1850"). May be labeled "Front Gross", "FE Gross", "Front End", "Gross Profit". Empty string if not found.
 - backGross: back-end gross profit as a numeric string without $ or commas (e.g. "900"). May be labeled "Back Gross", "BE Gross", "F&I", "Finance Gross". Empty string if not found.
-- date: sale date in YYYY-MM-DD format (e.g. "2024-06-15"). Empty string if not found.
+- date: the deal/sale date in YYYY-MM-DD format (e.g. "2024-06-15"). Empty string if not found or if you are not certain this is the sale date.
+- dateCertain: true only if the date clearly refers to the deal or sale date. Set to false if the date is ambiguous, could be a print date, an expiry date, a birth date, or any date that does not clearly identify the sale event. Also false if date is empty.
 - type: "new" if this is a new vehicle deal, "used" if used vehicle deal. Default "new".
 
 Return exactly this JSON shape (no extra keys):
-{"vehicleName":"","frontGross":"","backGross":"","date":"","type":"new"}`;
+{"vehicleName":"","frontGross":"","backGross":"","date":"","dateCertain":false,"type":"new"}`;
 
 ocrRouter.post("/ocr", async (req, res) => {
   const { imageBase64, mimeType } = req.body as {
@@ -49,10 +50,11 @@ ocrRouter.post("/ocr", async (req, res) => {
           vehicleName: "",
           frontGross: "",
           backGross: "",
-          date: new Date().toISOString().split("T")[0]!,
+          date: "",
           type: "new",
           fieldsFound: 0,
           lowConfidence: true,
+          dateCertain: false,
         } satisfies ExtractedFields);
         return;
       }

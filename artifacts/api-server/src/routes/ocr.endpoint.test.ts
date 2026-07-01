@@ -58,6 +58,7 @@ describe("POST /api/ocr", () => {
               frontGross: "1850",
               backGross: "900",
               date: "2024-06-15",
+              dateCertain: true,
               type: "new",
             }),
           },
@@ -76,10 +77,72 @@ describe("POST /api/ocr", () => {
       frontGross: "1850",
       backGross: "900",
       date: "2024-06-15",
+      dateCertain: true,
       type: "new",
       fieldsFound: 3,
       lowConfidence: false,
     });
+  });
+
+  it("returns dateCertain false when OpenAI flags an ambiguous date", async () => {
+    const { openai } = await import("@workspace/integrations-openai-ai-server");
+    const mockCreate = openai.chat.completions.create as ReturnType<typeof vi.fn>;
+    mockCreate.mockResolvedValueOnce({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              vehicleName: "2024 Toyota Camry",
+              frontGross: "1850",
+              backGross: "900",
+              date: "2024-06-15",
+              dateCertain: false,
+              type: "new",
+            }),
+          },
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .post("/api/ocr")
+      .send({ imageBase64: FIXTURE_JPEG_BASE64, mimeType: "image/jpeg" })
+      .set("Content-Type", "application/json");
+
+    expect(res.status).toBe(200);
+    expect(res.body.dateCertain).toBe(false);
+    expect(res.body.date).toBe("2024-06-15");
+    expect(res.body.lowConfidence).toBe(false);
+  });
+
+  it("returns dateCertain false when date is missing", async () => {
+    const { openai } = await import("@workspace/integrations-openai-ai-server");
+    const mockCreate = openai.chat.completions.create as ReturnType<typeof vi.fn>;
+    mockCreate.mockResolvedValueOnce({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              vehicleName: "2024 Toyota Camry",
+              frontGross: "1850",
+              backGross: "900",
+              date: "",
+              dateCertain: false,
+              type: "new",
+            }),
+          },
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .post("/api/ocr")
+      .send({ imageBase64: FIXTURE_JPEG_BASE64, mimeType: "image/jpeg" })
+      .set("Content-Type", "application/json");
+
+    expect(res.status).toBe(200);
+    expect(res.body.dateCertain).toBe(false);
+    expect(res.body.date).toBe("");
   });
 
   it("returns low-confidence response when OpenAI finds nothing", async () => {
@@ -94,6 +157,7 @@ describe("POST /api/ocr", () => {
               frontGross: "",
               backGross: "",
               date: "",
+              dateCertain: false,
               type: "new",
             }),
           },
@@ -109,6 +173,7 @@ describe("POST /api/ocr", () => {
     expect(res.status).toBe(200);
     expect(res.body.lowConfidence).toBe(true);
     expect(res.body.fieldsFound).toBe(0);
+    expect(res.body.dateCertain).toBe(false);
   });
 
   it("response always contains all required fields", async () => {
@@ -132,5 +197,6 @@ describe("POST /api/ocr", () => {
     expect(body).toHaveProperty("type");
     expect(body).toHaveProperty("fieldsFound");
     expect(body).toHaveProperty("lowConfidence");
+    expect(body).toHaveProperty("dateCertain");
   });
 });

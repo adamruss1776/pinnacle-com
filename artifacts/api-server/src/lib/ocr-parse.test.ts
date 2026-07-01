@@ -32,14 +32,13 @@ describe("cleanNumber", () => {
 });
 
 describe("parseExtraction", () => {
-  const TODAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
   it("parses a complete deal sheet response correctly", () => {
     const raw = JSON.stringify({
       vehicleName: "2024 Toyota Camry",
       frontGross: "1850",
       backGross: "900",
       date: "2024-06-15",
+      dateCertain: true,
       type: "new",
     });
 
@@ -49,6 +48,7 @@ describe("parseExtraction", () => {
     expect(result.frontGross).toBe("1850");
     expect(result.backGross).toBe("900");
     expect(result.date).toBe("2024-06-15");
+    expect(result.dateCertain).toBe(true);
     expect(result.type).toBe("new");
     expect(result.fieldsFound).toBe(3);
     expect(result.lowConfidence).toBe(false);
@@ -60,6 +60,7 @@ describe("parseExtraction", () => {
       frontGross: "2200",
       backGross: "750",
       date: "2024-03-10",
+      dateCertain: true,
       type: "used",
     });
 
@@ -75,6 +76,7 @@ describe("parseExtraction", () => {
       frontGross: "3000",
       backGross: "1200",
       date: "2024-01-20",
+      dateCertain: true,
       type: "unknown",
     });
 
@@ -88,6 +90,7 @@ describe("parseExtraction", () => {
       frontGross: "$2,500",
       backGross: "$1,100.00",
       date: "2024-05-01",
+      dateCertain: true,
       type: "new",
     });
 
@@ -102,6 +105,7 @@ describe("parseExtraction", () => {
       frontGross: "",
       backGross: "",
       date: "",
+      dateCertain: false,
       type: "new",
     });
 
@@ -110,7 +114,7 @@ describe("parseExtraction", () => {
     expect(result.lowConfidence).toBe(true);
   });
 
-  it("falls back to today's date when date field is missing or malformed", () => {
+  it("returns empty date and dateCertain:false when date field is malformed", () => {
     const raw = JSON.stringify({
       vehicleName: "2024 BMW 3 Series",
       frontGross: "4000",
@@ -120,10 +124,11 @@ describe("parseExtraction", () => {
     });
 
     const result = parseExtraction(raw);
-    expect(result.date).toMatch(TODAY_PATTERN);
+    expect(result.date).toBe("");
+    expect(result.dateCertain).toBe(false);
   });
 
-  it("falls back to today's date when date field is empty", () => {
+  it("returns empty date and dateCertain:false when date field is empty", () => {
     const raw = JSON.stringify({
       vehicleName: "2024 BMW 3 Series",
       frontGross: "4000",
@@ -133,17 +138,47 @@ describe("parseExtraction", () => {
     });
 
     const result = parseExtraction(raw);
-    expect(result.date).toMatch(TODAY_PATTERN);
+    expect(result.date).toBe("");
+    expect(result.dateCertain).toBe(false);
+  });
+
+  it("returns dateCertain:false when AI explicitly flags ambiguous date", () => {
+    const raw = JSON.stringify({
+      vehicleName: "2024 Toyota Camry",
+      frontGross: "1850",
+      backGross: "900",
+      date: "2024-06-15",
+      dateCertain: false,
+      type: "new",
+    });
+
+    const result = parseExtraction(raw);
+    expect(result.date).toBe("2024-06-15");
+    expect(result.dateCertain).toBe(false);
+  });
+
+  it("defaults dateCertain to true when a valid date is present and AI omits the field", () => {
+    const raw = JSON.stringify({
+      vehicleName: "2024 Toyota Camry",
+      frontGross: "1850",
+      backGross: "900",
+      date: "2024-06-15",
+      type: "new",
+    });
+
+    const result = parseExtraction(raw);
+    expect(result.dateCertain).toBe(true);
   });
 
   it("extracts JSON embedded in surrounding text (markdown code fences)", () => {
-    const raw = `Here is the extracted data:\n\`\`\`json\n{"vehicleName":"2024 Kia Telluride","frontGross":"2100","backGross":"800","date":"2024-07-04","type":"new"}\n\`\`\``;
+    const raw = `Here is the extracted data:\n\`\`\`json\n{"vehicleName":"2024 Kia Telluride","frontGross":"2100","backGross":"800","date":"2024-07-04","dateCertain":true,"type":"new"}\n\`\`\``;
 
     const result = parseExtraction(raw);
     expect(result.vehicleName).toBe("2024 Kia Telluride");
     expect(result.frontGross).toBe("2100");
     expect(result.backGross).toBe("800");
     expect(result.date).toBe("2024-07-04");
+    expect(result.dateCertain).toBe(true);
   });
 
   it("returns a safe fallback when given completely invalid JSON", () => {
@@ -152,7 +187,8 @@ describe("parseExtraction", () => {
     expect(result.vehicleName).toBe("");
     expect(result.frontGross).toBe("");
     expect(result.backGross).toBe("");
-    expect(result.date).toMatch(TODAY_PATTERN);
+    expect(result.date).toBe("");
+    expect(result.dateCertain).toBe(false);
     expect(result.type).toBe("new");
     expect(result.lowConfidence).toBe(true);
     expect(result.fieldsFound).toBe(0);
@@ -164,6 +200,7 @@ describe("parseExtraction", () => {
       frontGross: "",
       backGross: "600",
       date: "2024-02-14",
+      dateCertain: true,
       type: "new",
     });
 
@@ -178,6 +215,7 @@ describe("parseExtraction", () => {
     expect(result).toHaveProperty("frontGross");
     expect(result).toHaveProperty("backGross");
     expect(result).toHaveProperty("date");
+    expect(result).toHaveProperty("dateCertain");
     expect(result).toHaveProperty("type");
     expect(result).toHaveProperty("fieldsFound");
     expect(result).toHaveProperty("lowConfidence");
