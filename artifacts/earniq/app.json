@@ -16,10 +16,16 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.earniq",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "backgroundColor": "#080808"
+      "backgroundColor": "#080808",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -44,6 +50,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ea8aae02-e228-4874-a341-5754de198ad8"
+      }
     }
   }
 }
