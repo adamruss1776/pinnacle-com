@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import Purchases from "react-native-purchases";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
@@ -44,6 +44,8 @@ export function initializeRevenueCat() {
 }
 
 function useSubscriptionContext() {
+  const queryClient = useQueryClient();
+
   const customerInfoQuery = useQuery({
     queryKey: ["revenuecat", "customer-info"],
     queryFn: async () => {
@@ -67,14 +69,18 @@ function useSubscriptionContext() {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       return customerInfo;
     },
-    onSuccess: () => customerInfoQuery.refetch(),
+    onSuccess: (customerInfo) => {
+      queryClient.setQueryData(["revenuecat", "customer-info"], customerInfo);
+    },
   });
 
   const restoreMutation = useMutation({
     mutationFn: async () => {
       return Purchases.restorePurchases();
     },
-    onSuccess: () => customerInfoQuery.refetch(),
+    onSuccess: (customerInfo) => {
+      queryClient.setQueryData(["revenuecat", "customer-info"], customerInfo);
+    },
   });
 
   const rcSubscribed =
