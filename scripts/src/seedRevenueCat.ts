@@ -104,7 +104,10 @@ async function seedRevenueCat() {
     project = existingProject;
   } else {
     const { data: newProject, error } = await createProject({ client, body: { name: PROJECT_NAME } });
-    if (error) throw new Error("Failed to create project");
+    if (error) {
+      console.error("Create project error:", JSON.stringify(error, null, 2));
+      throw new Error("Failed to create project");
+    }
     console.log("Created project:", newProject.id);
     project = newProject;
   }
