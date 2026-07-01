@@ -137,8 +137,10 @@ export default function ImportScreen() {
   const [step, setStep] = useState<ImportStep>("choose");
   const [sourceType, setSourceType] = useState<"photo" | "pdf" | null>(null);
   const [ocrError, setOcrError] = useState<string | null>(null);
+  const [ocrErrorType, setOcrErrorType] = useState<"timeout" | "server" | null>(null);
   const [lowConfidence, setLowConfidence] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastScanRef = useRef<{ kind: "image"; uri: string; mimeType: string } | { kind: "pdf"; uri: string } | null>(null);
 
   const [extracted, setExtracted] = useState<ExtractedFields>({
     vehicleName: "",
@@ -227,8 +229,10 @@ export default function ImportScreen() {
   async function processImage(uri: string, mimeType: string) {
     setStep("processing");
     setOcrError(null);
+    setOcrErrorType(null);
     setLowConfidence(false);
     userCancelledRef.current = false;
+    lastScanRef.current = { kind: "image", uri, mimeType };
     const controller = new AbortController();
     abortControllerRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 30_000);
@@ -263,8 +267,14 @@ export default function ImportScreen() {
     } catch (err) {
       clearTimeout(timeoutId);
       if (userCancelledRef.current) return;
+      const isTimeout = err instanceof Error && err.name === "AbortError";
       console.error("OCR failed:", err);
-      setOcrError("Couldn't reach the server. Fill in the fields manually.");
+      setOcrErrorType(isTimeout ? "timeout" : "server");
+      setOcrError(
+        isTimeout
+          ? "Scan timed out — the server took too long to respond."
+          : "Couldn't reach the server. Check your connection and try again."
+      );
       setLowConfidence(false);
       setExtracted({
         vehicleName: "",
@@ -280,8 +290,10 @@ export default function ImportScreen() {
   async function processPDF(uri: string) {
     setStep("processing");
     setOcrError(null);
+    setOcrErrorType(null);
     setLowConfidence(false);
     userCancelledRef.current = false;
+    lastScanRef.current = { kind: "pdf", uri };
     const controller = new AbortController();
     abortControllerRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 30_000);
@@ -316,8 +328,14 @@ export default function ImportScreen() {
     } catch (err) {
       clearTimeout(timeoutId);
       if (userCancelledRef.current) return;
+      const isTimeout = err instanceof Error && err.name === "AbortError";
       console.error("PDF OCR failed:", err);
-      setOcrError("Couldn't reach the server. Fill in the fields manually.");
+      setOcrErrorType(isTimeout ? "timeout" : "server");
+      setOcrError(
+        isTimeout
+          ? "Scan timed out — the server took too long to respond."
+          : "Couldn't reach the server. Check your connection and try again."
+      );
       setLowConfidence(false);
       setExtracted({
         vehicleName: "",
@@ -337,6 +355,17 @@ export default function ImportScreen() {
       pathname: "/log-deal",
       params: buildPrefillParams(extracted),
     });
+  }
+
+  async function handleRetry() {
+    Haptics.selectionAsync();
+    const last = lastScanRef.current;
+    if (!last) return;
+    if (last.kind === "image") {
+      await processImage(last.uri, last.mimeType);
+    } else {
+      await processPDF(last.uri);
+    }
   }
 
   return (
@@ -460,11 +489,20 @@ export default function ImportScreen() {
               <View style={[styles.reviewCard, { backgroundColor: "#1f1200", borderColor: "#3d2800" }]}>
                 <Feather name="alert-circle" size={24} color={colors.amber} />
                 <Text style={[styles.reviewTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                  Scan Failed
+                  {ocrErrorType === "timeout" ? "Scan Timed Out" : "Scan Failed"}
                 </Text>
                 <Text style={[styles.reviewDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                   {ocrError}
                 </Text>
+                <TouchableOpacity
+                  style={[styles.tryAgainBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={handleRetry}
+                >
+                  <Feather name="refresh-cw" size={15} color={colors.foreground} />
+                  <Text style={[styles.tryAgainText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                    Try Again
+                  </Text>
+                </TouchableOpacity>
                 <View style={styles.fieldStatusList}>
                   <FieldStatus label="Vehicle" value={extracted.vehicleName} colors={colors} onEdit={() => openEdit("vehicleName")} />
                   <FieldStatus label="Front Gross" value={extracted.frontGross} prefix="$" colors={colors} onEdit={() => openEdit("frontGross")} />
@@ -721,6 +759,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   retakeBtnText: { fontSize: 15 },
+  tryAgainBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 6,
+    alignSelf: "stretch",
+  },
+  tryAgainText: { fontSize: 14 },
   continueBtn: {
     flexDirection: "row",
     alignItems: "center",
