@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Privacy Policy — EarnIQ</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 180 180' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='180' height='180' rx='36' fill='%23FF3C00'/%3E%3C/svg%3E" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 40px 20px 60px;
+        background: #fff;
+        color: #222;
+        line-height: 1.7;
+      }
+      .wrapper {
+        max-width: 680px;
+        margin: 0 auto;
+      }
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: #666;
+        text-decoration: none;
+        margin-bottom: 32px;
+      }
+      .back:hover {
+        color: #333;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 9px;
+        background: #FF3C00;
+        flex-shrink: 0;
+      }
+      .brand-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111;
+        margin: 0;
+      }
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 6px;
+        color: #111;
+        line-height: 1.2;
+      }
+      .updated {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 36px;
+      }
+      h2 {
+        font-size: 17px;
+        font-weight: 600;
+        color: #111;
+        margin: 36px 0 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #eee;
+      }
+      p {
+        font-size: 15px;
+        color: #444;
+        margin: 0 0 14px;
+      }
+      ul {
+        margin: 0 0 14px;
+        padding-left: 22px;
+      }
+      li {
+        font-size: 15px;
+        color: #444;
+        margin-bottom: 6px;
+      }
+      a {
+        color: #FF3C00;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .contact-box {
+        background: #fafafa;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin-top: 40px;
+      }
+      .contact-box p {
+        margin: 0;
+      }
+      @media (min-width: 768px) {
+        body {
+          padding: 56px 32px 80px;
+        }
+        h1 {
+          font-size: 34px;
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0d0d0d;
+          color: #e0e0e0;
+        }
+        h1, .brand-name {
+          color: #f5f5f5;
+        }
+        h2 {
+          color: #f0f0f0;
+          border-bottom-color: #2a2a2a;
+        }
+        p, li {
+          color: #aaa;
+        }
+        .updated {
+          color: #666;
+        }
+        .back {
+          color: #666;
+        }
+        .back:hover {
+          color: #aaa;
+        }
+        .contact-box {
+          background: #1a1a1a;
+          border-color: #2a2a2a;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <a href="/" class="back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        EarnIQ
+      </a>
+
+      <div class="brand">
+        <div class="brand-icon"></div>
+        <p class="brand-name">EarnIQ</p>
+      </div>
+
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: July 1, 2026</p>
+
+      <p>
+        EarnIQ ("we", "us", or "our") is a mobile application for automotive
+        sales professionals to track deals and commissions. This Privacy Policy
+        explains what information the app collects, how it is processed and
+        stored, and your rights regarding that information.
+      </p>
+
+      <h2>1. Information Stored on Your Device</h2>
+      <p>
+        EarnIQ does <strong>not</strong> require you to create an account or
+        provide any personal information to use the app. The following data is
+        stored <strong>locally on your device only</strong> using AsyncStorage
+        and is never uploaded to our servers:
+      </p>
+      <ul>
+        <li>Deal records you create (vehicle details, gross profit, commission amounts, dates, notes)</li>
+        <li>Spiff/bonus records (description, amount, date)</li>
+        <li>Pay plan configuration (commission tiers, caps, bonuses)</li>
+        <li>Monthly goals (unit and commission targets)</li>
+        <li>App preferences and onboarding status</li>
+      </ul>
+      <p>
+        If you delete the app, all locally stored data is permanently removed from your device.
+      </p>
+
+      <h2>2. Deal Sheet Scanning (AI-Assisted Import)</h2>
+      <p>
+        EarnIQ includes an optional feature that lets you photograph or import a
+        PDF of a deal sheet. When you use this feature:
+      </p>
+      <ul>
+        <li>The image or PDF is transmitted to <strong>our processing server</strong> solely to extract deal fields (vehicle name, gross profits, date, and deal type).</li>
+        <li>The server forwards the image or extracted text to <strong>OpenAI's API</strong> to perform the extraction.</li>
+        <li>The extracted fields are returned to your device and pre-filled in the deal entry form.</li>
+        <li>
+          <strong>Neither we nor OpenAI store the image or PDF</strong> after processing. The data is used only to fulfill your immediate request and is not retained, used for training, or shared further.
+        </li>
+      </ul>
+      <p>
+        This feature requires camera or photo library access on your device,
+        which you must grant via the system permission prompt. You can decline
+        or revoke that permission at any time in your device settings without
+        affecting other app features.
+      </p>
+      <p>
+        For more information on how OpenAI handles data, see
+        <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener">openai.com/policies/privacy-policy</a>.
+      </p>
+
+      <h2>3. Data Shared via Export</h2>
+      <p>
+        EarnIQ allows you to export your deal data as a CSV file using your
+        device's native share sheet (powered by <em>expo-sharing</em>). When
+        you choose to share or export a file, you control where it goes — for
+        example, to your email, a cloud storage app, or a messaging app. We do
+        not receive or have access to any data you choose to share.
+      </p>
+
+      <h2>4. In-App Purchases (Pro Subscription)</h2>
+      <p>
+        EarnIQ offers an optional Pro subscription that unlocks additional
+        features. Subscriptions are processed through <strong>RevenueCat</strong>,
+        a third-party payment and subscription management platform. When you
+        make a purchase, RevenueCat may collect:
+      </p>
+      <ul>
+        <li>A randomly generated device or user identifier</li>
+        <li>Purchase transaction data (product ID, purchase date, subscription status)</li>
+        <li>Device locale and platform information (iOS/Android)</li>
+      </ul>
+      <p>
+        RevenueCat does not collect your name, email address, or payment card
+        details — those remain with Apple (App Store) or Google (Google Play).
+        For more information, see RevenueCat's Privacy Policy at
+        <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">revenuecat.com/privacy</a>.
+      </p>
+      <p>
+        Actual payment processing is handled entirely by the App Store or
+        Google Play. We never see or store your payment information.
+      </p>
+
+      <h2>5. What We Do Not Collect</h2>
+      <ul>
+        <li>No account, email address, or login is required to use EarnIQ.</li>
+        <li>We do not collect your name, location, contacts, or any other personal identifiers.</li>
+        <li>We do not use analytics SDKs, advertising SDKs, or crash reporting services.</li>
+        <li>Deal records, pay plans, goals, and spiffs are stored on your device only and are never uploaded to our servers.</li>
+      </ul>
+
+      <h2>6. Children's Privacy</h2>
+      <p>
+        EarnIQ is intended for adults (automotive sales professionals) and is
+        not directed at children under the age of 13. We do not knowingly
+        collect information from children.
+      </p>
+
+      <h2>7. Changes to This Policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time. When we do, we
+        will update the "Last updated" date at the top of this page. Continued
+        use of EarnIQ after any changes constitutes your acceptance of the
+        updated policy.
+      </p>
+
+      <div class="contact-box">
+        <h2 style="margin-top:0; border-bottom:none; padding-bottom:0;">Contact</h2>
+        <p>
+          If you have questions or concerns about this Privacy Policy, please
+          contact us at
+          <a href="mailto:support@earniq.app">support@earniq.app</a>.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
