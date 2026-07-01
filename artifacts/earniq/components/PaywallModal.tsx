@@ -15,6 +15,9 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { useSubscription } from "@/lib/revenuecat";
 import { useColors } from "@/hooks/useColors";
 
+const MONTHLY_PRICE_DISPLAY = "$3.99/mo";
+const ANNUAL_PRICE_DISPLAY = "$49.99/yr";
+
 const PRO_FEATURES = [
   { icon: "trending-up-outline" as const, text: "Projected month-end commission" },
   { icon: "flag-outline" as const, text: "Goal tracking with pace alerts" },
@@ -211,7 +214,7 @@ export function PaywallModal({ visible, onClose }: PaywallModalProps) {
                       </View>
                     </View>
                     <Text style={[styles.packageSub, { color: "#666666", fontFamily: "Inter_400Regular" }]}>
-                      {annualPkg.product.priceString}/year
+                      {ANNUAL_PRICE_DISPLAY}
                     </Text>
                   </View>
                   <View style={styles.packageRight}>
@@ -244,7 +247,7 @@ export function PaywallModal({ visible, onClose }: PaywallModalProps) {
                       Monthly
                     </Text>
                     <Text style={[styles.packageSub, { color: "#666666", fontFamily: "Inter_400Regular" }]}>
-                      {monthlyPkg.product.priceString}/month
+                      {MONTHLY_PRICE_DISPLAY}
                     </Text>
                   </View>
                   <View style={styles.packageRight}>
@@ -301,7 +304,7 @@ export function PaywallModal({ visible, onClose }: PaywallModalProps) {
             ) : (
               <Text style={[styles.purchaseBtnText, { fontFamily: "Inter_700Bold" }]}>
                 {activePkg
-                  ? `Start Pro — ${activePkg.product.priceString}/${getPackageLabel(activePkg) === "Annual" ? "yr" : "mo"}`
+                  ? `Start Pro — ${getPackageLabel(activePkg) === "Annual" ? ANNUAL_PRICE_DISPLAY : MONTHLY_PRICE_DISPLAY}`
                   : "Loading…"}
               </Text>
             )}
@@ -331,7 +334,7 @@ export function PaywallModal({ visible, onClose }: PaywallModalProps) {
       <ConfirmModal
         visible={confirming}
         packageLabel={getPackageLabel(pendingPkg)}
-        price={pendingPkg?.product.priceString ?? ""}
+        price={getPackageLabel(pendingPkg) === "Annual" ? ANNUAL_PRICE_DISPLAY : MONTHLY_PRICE_DISPLAY}
         onConfirm={handleConfirmPurchase}
         onCancel={() => setConfirming(false)}
       />

@@ -55,7 +55,7 @@ const MONTHLY_PRICES = [
 ];
 
 const ANNUAL_PRICES = [
-  { amount_micros: 29990000, currency: "USD" },
+  { amount_micros: 49990000, currency: "USD" },
 ];
 
 type TestStorePricesResponse = {
@@ -78,7 +78,9 @@ async function setTestStorePrices(
 
   if (error) {
     if (error && typeof error === "object" && "type" in error && error["type"] === "resource_already_exists") {
-      console.log(`${label} test store prices already exist`);
+      // RC test store prices cannot be updated via API (only DELETE/PATCH return 405).
+      // The canonical price is defined in PaywallModal.tsx and displayed directly.
+      console.log(`${label} test store prices already set (cannot update via API — see PaywallModal for display price)`);
     } else {
       throw new Error(`Failed to add ${label} test store prices`);
     }
