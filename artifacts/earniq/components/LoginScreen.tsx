@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -64,10 +65,11 @@ export function LoginScreen({ onComplete }: Props) {
       >
         {/* Brand */}
         <View style={styles.brand}>
-          <View style={styles.iconBox}>
-            <Ionicons name="calculator-outline" size={36} color="#4ade80" />
-          </View>
-          <Text style={styles.appName}>EarnIQ</Text>
+          <Image
+            source={require("@/assets/images/logo.jpeg")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.tagline}>Your commission, always on track.</Text>
         </View>
 
@@ -167,22 +169,12 @@ const styles = StyleSheet.create({
   brand: {
     alignItems: "center",
     marginBottom: 44,
-    gap: 8,
+    gap: 12,
   },
-  iconBox: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: "#0d1f14",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  appName: {
-    fontSize: 32,
-    fontFamily: "Inter_700Bold",
-    color: "#4ade80",
-    letterSpacing: -0.5,
+  logo: {
+    width: 200,
+    height: 200,
+    borderRadius: 36,
   },
   tagline: {
     fontSize: 14,
