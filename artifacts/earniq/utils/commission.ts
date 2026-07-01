@@ -46,9 +46,10 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y!, m! - 1, d!);
   return date.toLocaleDateString("en-US", {
-    month: "short",
+    month: "long",
     day: "numeric",
     year: "numeric",
   });
@@ -58,8 +59,13 @@ export function generateId(): string {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
 
+function parseDateLocal(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y!, m! - 1, d!);
+}
+
 export function isThisMonth(dateStr: string): boolean {
-  const date = new Date(dateStr);
+  const date = parseDateLocal(dateStr);
   const now = new Date();
   return (
     date.getMonth() === now.getMonth() &&
@@ -68,7 +74,7 @@ export function isThisMonth(dateStr: string): boolean {
 }
 
 export function isThisYear(dateStr: string): boolean {
-  const date = new Date(dateStr);
+  const date = parseDateLocal(dateStr);
   const now = new Date();
   return date.getFullYear() === now.getFullYear();
 }

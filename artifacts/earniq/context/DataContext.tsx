@@ -130,33 +130,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     load();
   }, []);
 
-  useEffect(() => {
-    if (isLoading) return;
-    AsyncStorage.setItem(DEALS_KEY, JSON.stringify(deals)).catch((e) =>
-      console.error("Failed to save deals", e)
-    );
-  }, [deals, isLoading]);
-
-  useEffect(() => {
-    if (isLoading) return;
-    AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(spiffs)).catch((e) =>
-      console.error("Failed to save spiffs", e)
-    );
-  }, [spiffs, isLoading]);
-
-  useEffect(() => {
-    if (isLoading) return;
-    AsyncStorage.setItem(PAYPLAN_KEY, JSON.stringify(payPlan)).catch((e) =>
-      console.error("Failed to save pay plan", e)
-    );
-  }, [payPlan, isLoading]);
-
-  useEffect(() => {
-    if (isLoading) return;
-    AsyncStorage.setItem(GOALS_KEY, JSON.stringify(monthlyGoals)).catch((e) =>
-      console.error("Failed to save goals", e)
-    );
-  }, [monthlyGoals, isLoading]);
 
   const addDeal = useCallback(
     (dealData: Omit<Deal, "id" | "createdAt" | "commission" | "isCapped">) => {
@@ -174,7 +147,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         commission: result.commission,
         isCapped: result.isCapped,
       };
-      setDeals((prev) => [newDeal, ...prev]);
+      setDeals((prev) => {
+        const next = [newDeal, ...prev];
+        AsyncStorage.setItem(DEALS_KEY, JSON.stringify(next)).catch((e) =>
+          console.error("Failed to save deals", e)
+        );
+        return next;
+      });
     },
     [payPlan]
   );
@@ -188,19 +167,29 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         dealData.split,
         payPlan
       );
-      setDeals((prev) =>
-        prev.map((d) =>
+      setDeals((prev) => {
+        const next = prev.map((d) =>
           d.id === id
             ? { ...d, ...dealData, commission: result.commission, isCapped: result.isCapped }
             : d
-        )
-      );
+        );
+        AsyncStorage.setItem(DEALS_KEY, JSON.stringify(next)).catch((e) =>
+          console.error("Failed to save deals", e)
+        );
+        return next;
+      });
     },
     [payPlan]
   );
 
   const deleteDeal = useCallback((id: string) => {
-    setDeals((prev) => prev.filter((d) => d.id !== id));
+    setDeals((prev) => {
+      const next = prev.filter((d) => d.id !== id);
+      AsyncStorage.setItem(DEALS_KEY, JSON.stringify(next)).catch((e) =>
+        console.error("Failed to save deals", e)
+      );
+      return next;
+    });
   }, []);
 
   const addSpiff = useCallback(
@@ -210,27 +199,49 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         id: generateId(),
         createdAt: new Date().toISOString(),
       };
-      setSpiffs((prev) => [newSpiff, ...prev]);
+      setSpiffs((prev) => {
+        const next = [newSpiff, ...prev];
+        AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(next)).catch((e) =>
+          console.error("Failed to save spiffs", e)
+        );
+        return next;
+      });
     },
     []
   );
 
   const updateSpiff = useCallback((id: string, spiffData: Omit<Spiff, "id" | "createdAt">) => {
-    setSpiffs((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...spiffData } : s))
-    );
+    setSpiffs((prev) => {
+      const next = prev.map((s) => (s.id === id ? { ...s, ...spiffData } : s));
+      AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(next)).catch((e) =>
+        console.error("Failed to save spiffs", e)
+      );
+      return next;
+    });
   }, []);
 
   const deleteSpiff = useCallback((id: string) => {
-    setSpiffs((prev) => prev.filter((s) => s.id !== id));
+    setSpiffs((prev) => {
+      const next = prev.filter((s) => s.id !== id);
+      AsyncStorage.setItem(SPIFFS_KEY, JSON.stringify(next)).catch((e) =>
+        console.error("Failed to save spiffs", e)
+      );
+      return next;
+    });
   }, []);
 
   const updatePayPlan = useCallback((plan: PayPlan) => {
     setPayPlan(plan);
+    AsyncStorage.setItem(PAYPLAN_KEY, JSON.stringify(plan)).catch((e) =>
+      console.error("Failed to save pay plan", e)
+    );
   }, []);
 
   const updateGoals = useCallback((goals: MonthlyGoals) => {
     setMonthlyGoals(goals);
+    AsyncStorage.setItem(GOALS_KEY, JSON.stringify(goals)).catch((e) =>
+      console.error("Failed to save goals", e)
+    );
   }, []);
 
   const mtdDeals = deals.filter((d) => isThisMonth(d.date));

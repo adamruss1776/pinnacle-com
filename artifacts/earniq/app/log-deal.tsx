@@ -180,7 +180,7 @@ export default function LogDealScreen() {
               <TextInput
                 value={date}
                 onChangeText={setDate}
-                placeholder="YYYY-MM-DD"
+                placeholder="e.g. 2026-07-01"
                 placeholderTextColor={colors.mutedForeground}
                 style={[styles.input, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
               />
