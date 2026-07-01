@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -5,15 +6,18 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Onboarding } from "@/components/Onboarding";
 import { DataProvider } from "@/context/DataContext";
+
+const ONBOARDING_KEY = "@earniq_onboarded";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -57,13 +61,31 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+      setShowOnboarding(!val);
+      setOnboardingChecked(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && onboardingChecked) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, onboardingChecked]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if ((!fontsLoaded && !fontError) || !onboardingChecked) return null;
+
+  async function handleOnboardingComplete(goToPayPlan: boolean) {
+    await AsyncStorage.setItem(ONBOARDING_KEY, "1");
+    setShowOnboarding(false);
+    if (goToPayPlan) {
+      setTimeout(() => router.replace("/(tabs)/pay-plan"), 50);
+    }
+  }
 
   return (
     <SafeAreaProvider>
@@ -72,6 +94,9 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <RootLayoutNav />
+              {showOnboarding && (
+                <Onboarding onComplete={handleOnboardingComplete} />
+              )}
             </KeyboardProvider>
           </GestureHandlerRootView>
         </DataProvider>
