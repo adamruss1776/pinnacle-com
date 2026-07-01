@@ -8,7 +8,9 @@ import Constants from "expo-constants";
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 
 const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
-const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
+const REVENUECAT_IOS_API_KEY =
+  (Constants.expoConfig?.extra?.revenueCatIosApiKey as string | undefined) ||
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";
@@ -31,6 +33,8 @@ function getRevenueCatApiKey() {
 
 export function initializeRevenueCat() {
   const apiKey = getRevenueCatApiKey();
+  // Temporary diagnostic — logs presence and length only, never the key value
+  console.log(`[RC] key present=${!!apiKey} len=${apiKey?.length ?? 0} extra=${!!(Constants.expoConfig?.extra?.revenueCatIosApiKey)}`);
   if (!apiKey) throw new Error("RevenueCat Public API Key not found");
 
   Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
