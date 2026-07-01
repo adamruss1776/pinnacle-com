@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -41,6 +41,9 @@ const SPLITS = [
   { label: "50%", value: 0.5 },
 ];
 
+const MISSING_AMBER = "#f59e0b";
+const MISSING_AMBER_BG = "rgba(245,158,11,0.08)";
+
 export default function LogDealScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -62,6 +65,14 @@ export default function LogDealScreen() {
 
   const prefill = readPrefillParams(params, today);
 
+  // Detect whether we arrived from a scan (any prefill param present)
+  const fromScan =
+    !isEdit &&
+    (params.prefillVehicle !== undefined ||
+      params.prefillFront !== undefined ||
+      params.prefillBack !== undefined ||
+      params.prefillDate !== undefined);
+
   const [date, setDate] = useState(existingDeal?.date ?? prefill.date);
   const [vehicleName, setVehicleName] = useState(existingDeal?.vehicleName ?? prefill.vehicleName);
   const [stockNumber, setStockNumber] = useState(existingDeal?.stockNumber ?? "");
@@ -75,6 +86,35 @@ export default function LogDealScreen() {
   const [split, setSplit] = useState(existingDeal?.split ?? 1);
   const [partnerName, setPartnerName] = useState(existingDeal?.partnerName ?? "");
   const [notes, setNotes] = useState(existingDeal?.notes ?? "");
+
+  // Missing-field highlight state — only active when arriving from a scan
+  const [missingVehicle, setMissingVehicle] = useState(fromScan && !prefill.vehicleName.trim());
+  const [missingFront, setMissingFront] = useState(fromScan && !prefill.frontGross.trim());
+
+  const scrollRef = useRef<ScrollView>(null);
+  const vehicleCardRef = useRef<View>(null);
+  const frontCardRef = useRef<View>(null);
+
+  // Auto-scroll to first missing required field after mount
+  useEffect(() => {
+    if (!fromScan) return;
+    const hasMissingVehicle = !prefill.vehicleName.trim();
+    const hasMissingFront = !prefill.frontGross.trim();
+    if (!hasMissingVehicle && !hasMissingFront) return;
+
+    const timer = setTimeout(() => {
+      const targetRef = hasMissingVehicle ? vehicleCardRef : frontCardRef;
+      targetRef.current?.measureLayout(
+        // @ts-ignore — measureLayout against ScrollView's inner node
+        scrollRef.current as any,
+        (_x: number, y: number) => {
+          scrollRef.current?.scrollTo({ y: Math.max(0, y - 80), animated: true });
+        },
+        () => {}
+      );
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   const front = parseFloat(frontGross) || 0;
   const back = parseFloat(backGross) || 0;
@@ -108,6 +148,8 @@ export default function LogDealScreen() {
     }
     router.back();
   }
+
+  const anyMissing = missingVehicle || missingFront;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -147,11 +189,28 @@ export default function LogDealScreen() {
         keyboardVerticalOffset={0}
       >
         <ScrollView
+          ref={scrollRef}
           style={styles.scroll}
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Scan-origin missing-fields banner */}
+          {anyMissing && (
+            <View style={[styles.missingBanner, { borderColor: MISSING_AMBER }]}>
+              <Ionicons name="alert-circle" size={16} color={MISSING_AMBER} />
+              <Text style={[styles.missingBannerText, { fontFamily: "Inter_500Medium" }]}>
+                Fill in the highlighted{" "}
+                {missingVehicle && missingFront
+                  ? "fields"
+                  : missingVehicle
+                  ? "Vehicle field"
+                  : "Front Gross field"}{" "}
+                to complete your deal.
+              </Text>
+            </View>
+          )}
+
           {/* Vehicle Type Toggle */}
           <View style={[styles.typeToggle, { backgroundColor: colors.input }]}>
             <TouchableOpacity
@@ -189,7 +248,16 @@ export default function LogDealScreen() {
           </View>
 
           {/* Fields */}
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            ref={vehicleCardRef}
+            style={[
+              styles.card,
+              {
+                backgroundColor: missingVehicle ? MISSING_AMBER_BG : colors.surface,
+                borderColor: missingVehicle ? MISSING_AMBER : colors.border,
+              },
+            ]}
+          >
             <FieldRow label="Date" colors={colors}>
               <TextInput
                 value={toDisplayDate(date)}
@@ -199,17 +267,20 @@ export default function LogDealScreen() {
                 style={[styles.input, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
               />
             </FieldRow>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <FieldRow label="Vehicle" colors={colors}>
+            <View style={[styles.divider, { backgroundColor: missingVehicle ? MISSING_AMBER + "40" : colors.border }]} />
+            <FieldRow label="Vehicle" colors={colors} isRequired={missingVehicle}>
               <TextInput
                 value={vehicleName}
-                onChangeText={setVehicleName}
+                onChangeText={(v) => {
+                  setVehicleName(v);
+                  if (v.trim()) setMissingVehicle(false);
+                }}
                 placeholder="e.g. 2024 Toyota Camry"
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={missingVehicle ? MISSING_AMBER + "99" : colors.mutedForeground}
                 style={[styles.input, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
               />
             </FieldRow>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <View style={[styles.divider, { backgroundColor: missingVehicle ? MISSING_AMBER + "40" : colors.border }]} />
             <FieldRow label="Stock #" colors={colors}>
               <TextInput
                 value={stockNumber}
@@ -221,18 +292,30 @@ export default function LogDealScreen() {
             </FieldRow>
           </View>
 
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <FieldRow label="Front Gross" colors={colors} prefix="$">
+          <View
+            ref={frontCardRef}
+            style={[
+              styles.card,
+              {
+                backgroundColor: missingFront ? MISSING_AMBER_BG : colors.surface,
+                borderColor: missingFront ? MISSING_AMBER : colors.border,
+              },
+            ]}
+          >
+            <FieldRow label="Front Gross" colors={colors} prefix="$" isRequired={missingFront}>
               <TextInput
                 value={frontGross}
-                onChangeText={setFrontGross}
+                onChangeText={(v) => {
+                  setFrontGross(v);
+                  if (v.trim()) setMissingFront(false);
+                }}
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor={colors.mutedForeground}
+                placeholderTextColor={missingFront ? MISSING_AMBER + "99" : colors.mutedForeground}
                 style={[styles.input, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}
               />
             </FieldRow>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <View style={[styles.divider, { backgroundColor: missingFront ? MISSING_AMBER + "40" : colors.border }]} />
             <FieldRow label="Back Gross" colors={colors} prefix="$">
               <TextInput
                 value={backGross}
@@ -336,20 +419,37 @@ function FieldRow({
   children,
   colors,
   prefix,
+  isRequired,
 }: {
   label: string;
   children: React.ReactNode;
   colors: any;
   prefix?: string;
+  isRequired?: boolean;
 }) {
   return (
     <View style={fieldStyles.row}>
-      <Text style={[fieldStyles.label, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-        {label}
-      </Text>
+      <View style={fieldStyles.labelWrap}>
+        <Text
+          style={[
+            fieldStyles.label,
+            {
+              color: isRequired ? MISSING_AMBER : colors.mutedForeground,
+              fontFamily: isRequired ? "Inter_600SemiBold" : "Inter_400Regular",
+            },
+          ]}
+        >
+          {label}
+        </Text>
+        {isRequired && (
+          <Text style={[fieldStyles.requiredBadge, { fontFamily: "Inter_600SemiBold" }]}>Required</Text>
+        )}
+      </View>
       <View style={fieldStyles.inputWrap}>
         {prefix && (
-          <Text style={[fieldStyles.prefix, { color: colors.mutedForeground }]}>{prefix}</Text>
+          <Text style={[fieldStyles.prefix, { color: isRequired ? MISSING_AMBER : colors.mutedForeground }]}>
+            {prefix}
+          </Text>
         )}
         {children}
       </View>
@@ -364,7 +464,19 @@ const fieldStyles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
   },
+  labelWrap: { flexDirection: "row", alignItems: "center", gap: 6 },
   label: { fontSize: 14 },
+  requiredBadge: {
+    fontSize: 10,
+    color: MISSING_AMBER,
+    backgroundColor: MISSING_AMBER_BG,
+    borderColor: MISSING_AMBER,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    overflow: "hidden",
+  },
   inputWrap: { flexDirection: "row", alignItems: "center", flex: 1, justifyContent: "flex-end" },
   prefix: { fontSize: 16, marginRight: 2 },
 });
@@ -386,6 +498,21 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 15 },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 16, paddingTop: 16, gap: 12 },
+  missingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: MISSING_AMBER_BG,
+  },
+  missingBannerText: {
+    fontSize: 13,
+    color: MISSING_AMBER,
+    flex: 1,
+  },
   typeToggle: {
     flexDirection: "row",
     borderRadius: 12,
