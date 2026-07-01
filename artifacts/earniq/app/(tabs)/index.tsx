@@ -126,6 +126,16 @@ export default function EarningsScreen() {
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
+            style={styles.settingsBtn}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/settings");
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="settings-outline" size={22} color={colors.mutedForeground} />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => {
               Haptics.selectionAsync();
@@ -463,6 +473,7 @@ const styles = StyleSheet.create({
   appName: { fontSize: 32 },
   period: { fontSize: 14, marginTop: 2 },
   headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
+  settingsBtn: { padding: 4 },
   proBadgeBtn: {
     flexDirection: "row",
     alignItems: "center",

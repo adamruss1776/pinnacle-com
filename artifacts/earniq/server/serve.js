@@ -16,6 +16,7 @@ const path = require("path");
 const STATIC_ROOT = path.resolve(__dirname, "..", "static-build");
 const TEMPLATE_PATH = path.resolve(__dirname, "templates", "landing-page.html");
 const PRIVACY_POLICY_PATH = path.resolve(__dirname, "templates", "privacy-policy.html");
+const TERMS_OF_SERVICE_PATH = path.resolve(__dirname, "templates", "terms-of-service.html");
 const basePath = (process.env.BASE_PATH || "/").replace(/\/+$/, "");
 
 const MIME_TYPES = {
@@ -107,6 +108,7 @@ function serveStaticFile(urlPath, res) {
 
 const landingPageTemplate = fs.readFileSync(TEMPLATE_PATH, "utf-8");
 const privacyPolicyHtml = fs.readFileSync(PRIVACY_POLICY_PATH, "utf-8");
+const termsOfServiceHtml = fs.readFileSync(TERMS_OF_SERVICE_PATH, "utf-8");
 const appName = getAppName();
 
 const server = http.createServer((req, res) => {
@@ -120,6 +122,12 @@ const server = http.createServer((req, res) => {
   if (pathname === "/privacy") {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     res.end(privacyPolicyHtml);
+    return;
+  }
+
+  if (pathname === "/terms") {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    res.end(termsOfServiceHtml);
     return;
   }
 

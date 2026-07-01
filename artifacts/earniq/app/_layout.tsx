@@ -20,6 +20,7 @@ import { LoginScreen } from "@/components/LoginScreen";
 import { Onboarding } from "@/components/Onboarding";
 import { DataProvider } from "@/context/DataContext";
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
+import { registerLogoutListener } from "@/lib/logout";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 
 try {
@@ -62,6 +63,10 @@ function RootLayoutNav() {
           presentation: "modal",
           animation: "slide_from_bottom",
         }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{ headerShown: false }}
       />
     </Stack>
   );
@@ -127,6 +132,10 @@ export default function RootLayout() {
     AsyncStorage.getItem(LOGIN_DONE_KEY).then((val) => {
       setLoginDone(!!val);
     });
+  }, []);
+
+  useEffect(() => {
+    registerLogoutListener(() => setLoginDone(false));
   }, []);
 
   useEffect(() => {

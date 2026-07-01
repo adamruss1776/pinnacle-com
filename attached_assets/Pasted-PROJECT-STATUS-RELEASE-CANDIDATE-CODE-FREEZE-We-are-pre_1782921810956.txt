@@ -1,0 +1,101 @@
+PROJECT STATUS: RELEASE CANDIDATE / CODE FREEZE
+
+We are preparing the production App Store submission for EarnIQ.
+
+DO NOT add any new features beyond what is required for launch.
+
+Only make the following production-readiness changes.
+
+========================================
+1. App Store blockers
+========================================
+
+• Configure the iOS bundle identifier using:
+
+app.earniq
+
+(or app.earniq.mobile if needed for uniqueness)
+
+• Set the initial iOS build number to:
+
+1
+
+• Generate a production-ready eas.json.
+
+• Prepare the app to use the Production RevenueCat iOS API key from environment variables.
+
+Do not change product IDs or entitlement names.
+
+========================================
+2. Settings screen
+========================================
+
+Do NOT add another bottom navigation item.
+
+Instead:
+
+• Add a small gear icon in the upper-right corner of the Home/Dashboard screen.
+
+The gear should open a simple Settings screen using the existing app design language.
+
+The Settings screen should contain ONLY:
+
+Account
+- Log Out
+
+Subscriptions
+- Restore Purchases
+
+Legal
+- Privacy Policy
+- Terms of Service
+
+Support
+- Contact Support
+
+About
+- App Version
+
+If account deletion is required by the authentication provider, include:
+
+- Delete Account
+
+Do not add profile editing, themes, preferences, analytics, or any additional features.
+
+Keep the page extremely clean.
+
+========================================
+3. Launch verification
+========================================
+
+Confirm:
+
+✓ RevenueCat purchase immediately unlocks Pro
+
+✓ Subscription expiration re-locks Pro
+
+✓ Login and logout both work correctly
+
+✓ Restore Purchases works
+
+✓ Privacy Policy URL is public
+
+✓ Terms URL is public
+
+✓ EAS build succeeds
+
+✓ No TypeScript errors
+
+✓ No failing tests
+
+========================================
+4. Release policy
+========================================
+
+This project is now under code freeze.
+
+Do not generate additional feature work.
+
+If you discover non-critical improvements, add them to a post-launch backlog instead of implementing them.
+
+Our only objective is a successful TestFlight build and App Store approval.

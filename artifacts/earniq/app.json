@@ -14,7 +14,9 @@
       "backgroundColor": "#080808"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "app.earniq",
+      "buildNumber": "1"
     },
     "android": {
       "backgroundColor": "#080808"
