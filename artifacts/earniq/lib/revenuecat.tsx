@@ -10,7 +10,8 @@ import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
 const REVENUECAT_IOS_API_KEY =
   (Constants.expoConfig?.extra?.revenueCatIosApiKey as string | undefined) ||
-  process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY ||
+  "appl_WoycQNRYhGaBZJuLbCNEtnsIPOA";
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";

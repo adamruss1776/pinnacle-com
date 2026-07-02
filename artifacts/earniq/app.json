@@ -54,7 +54,8 @@
     "extra": {
       "eas": {
         "projectId": "ea8aae02-e228-4874-a341-5754de198ad8"
-      }
+      },
+      "revenueCatIosApiKey": "appl_WoycQNRYhGaBZJuLbCNEtnsIPOA"
     }
   }
 }
