@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.earniq",
-      "buildNumber": "1",
+      "buildNumber": "9",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
