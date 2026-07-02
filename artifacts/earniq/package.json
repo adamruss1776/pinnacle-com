@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "eas-build-post-install": "echo '--- PWD ---' && pwd && echo '--- LS ---' && ls -la && echo '--- App.js ---' && ls -la App.js 2>&1 || true && echo '--- artifacts/earniq/App.js ---' && ls -la artifacts/earniq/App.js 2>&1 || true"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
