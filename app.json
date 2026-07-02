@@ -1,15 +1,61 @@
 {
   "expo": {
-    "extra": {
-      "eas": {
-        "projectId": "b88eb267-27b1-4a6f-b0f9-c23e801e29ef"
-      }
+    "name": "EarnIQ",
+    "slug": "earniq",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./artifacts/earniq/assets/images/icon.png",
+    "scheme": "earniq",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./artifacts/earniq/assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#080808"
     },
     "ios": {
+      "supportsTablet": false,
       "bundleIdentifier": "app.earniq",
+      "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
+    },
+    "android": {
+      "backgroundColor": "#080808",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./artifacts/earniq/assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow EarnIQ to access your photos to import deal sheets.",
+          "cameraPermission": "Allow EarnIQ to use the camera to capture deal sheets."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ea8aae02-e228-4874-a341-5754de198ad8"
+      },
+      "revenueCatIosApiKey": "appl_WoycQNRYhGaBZJuLbCNEtnsIPOA"
     }
   }
 }
