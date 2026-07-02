@@ -9,6 +9,7 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
+  "main": "artifacts/earniq/index.js",
   "pnpm": {
     "overrides": {
       "postcss": ">=8.5.10",
