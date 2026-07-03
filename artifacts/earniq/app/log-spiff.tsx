@@ -41,7 +41,7 @@ export default function LogSpiffScreen() {
   const existingSpiff = editId ? spiffs.find((s) => s.id === editId) : undefined;
   const isEdit = !!existingSpiff;
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   const [date, setDate] = useState(existingSpiff?.date ?? today);
   const [description, setDescription] = useState(existingSpiff?.description ?? "");
   const [amount, setAmount] = useState(

@@ -46,7 +46,7 @@ function ConfirmModal({ visible, packageLabel, price, onConfirm, onCancel }: Con
             Confirm Purchase
           </Text>
           <Text style={[styles.confirmBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            Subscribe to EarnIQ Pro {packageLabel} for {price}?{"\n"}(Test Store purchase)
+            Subscribe to EarnIQ Pro {packageLabel} for {price}?
           </Text>
           <View style={styles.confirmBtns}>
             <TouchableOpacity
