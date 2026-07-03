@@ -13,10 +13,23 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// Resolve the @/ alias to the Expo app root so Metro finds it when
-// bundling from the monorepo root (as EAS does).
-config.resolver.alias = {
-  "@": projectRoot,
+// EAS builds from the monorepo root, so Metro cannot infer the @/ alias
+// from the Expo project at artifacts/earniq. Intercept @/ imports here
+// and rewrite them to absolute paths before the default resolver runs.
+const defaultResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName.startsWith("@/")) {
+    const absolutePath = path.resolve(projectRoot, moduleName.slice(2));
+    return (defaultResolveRequest ?? context.resolveRequest)(
+      context,
+      absolutePath,
+      platform
+    );
+  }
+  if (defaultResolveRequest) {
+    return defaultResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
 };
 
 module.exports = config;
