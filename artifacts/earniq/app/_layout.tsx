@@ -9,9 +9,8 @@ import {
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, ErrorUtils } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -22,6 +21,15 @@ import { DataProvider } from "@/context/DataContext";
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 import { registerLogoutListener } from "@/lib/logout";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
+
+// Surface any unhandled JS crash as an Alert so we can diagnose in production.
+const _prevHandler = ErrorUtils.getGlobalHandler();
+ErrorUtils.setGlobalHandler((error, isFatal) => {
+  if (isFatal) {
+    Alert.alert("Fatal Error", `${error?.message}\n\n${error?.stack?.slice(0, 400)}`);
+  }
+  _prevHandler?.(error, isFatal);
+});
 
 try {
   initializeRevenueCat();
@@ -103,12 +111,10 @@ function MainAppLayout() {
           <DataProvider>
             <SubscriptionProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <RootLayoutNav />
-                  {showOnboarding && (
-                    <Onboarding onComplete={handleOnboardingComplete} />
-                  )}
-                </KeyboardProvider>
+                <RootLayoutNav />
+                {showOnboarding && (
+                  <Onboarding onComplete={handleOnboardingComplete} />
+                )}
               </GestureHandlerRootView>
             </SubscriptionProvider>
           </DataProvider>
