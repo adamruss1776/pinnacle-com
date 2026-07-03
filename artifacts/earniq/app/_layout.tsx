@@ -9,7 +9,7 @@ import {
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Alert, ErrorUtils } from "react-native";
+import { Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,21 +21,6 @@ import { DataProvider } from "@/context/DataContext";
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 import { registerLogoutListener } from "@/lib/logout";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
-
-// Surface any unhandled JS crash as an Alert so we can diagnose in production.
-const _prevHandler = ErrorUtils.getGlobalHandler();
-ErrorUtils.setGlobalHandler((error, isFatal) => {
-  if (isFatal) {
-    Alert.alert("Fatal Error", `${error?.message}\n\n${error?.stack?.slice(0, 400)}`);
-  }
-  _prevHandler?.(error, isFatal);
-});
-
-try {
-  initializeRevenueCat();
-} catch (err: any) {
-  Alert.alert("RevenueCat Unavailable", err?.message ?? "Unknown error");
-}
 
 const queryClient = new QueryClient();
 
@@ -133,6 +118,16 @@ export default function RootLayout() {
   });
 
   const [loginDone, setLoginDone] = useState<boolean | null>(null);
+
+  // Initialize RevenueCat after first render so a native crash here
+  // doesn't kill the process before the UI tree is mounted.
+  useEffect(() => {
+    try {
+      initializeRevenueCat();
+    } catch (err: any) {
+      Alert.alert("RevenueCat Unavailable", err?.message ?? "Unknown error");
+    }
+  }, []);
 
   useEffect(() => {
     AsyncStorage.getItem(LOGIN_DONE_KEY).then((val) => {
