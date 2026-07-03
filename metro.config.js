@@ -13,4 +13,10 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
+// Resolve the @/ alias to the Expo app root so Metro finds it when
+// bundling from the monorepo root (as EAS does).
+config.resolver.alias = {
+  "@": projectRoot,
+};
+
 module.exports = config;
