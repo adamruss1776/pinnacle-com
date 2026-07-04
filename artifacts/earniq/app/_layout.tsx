@@ -129,14 +129,21 @@ export default function RootLayout() {
     registerLogoutListener(() => setLoginDone(false));
   }, []);
 
-  // Hide splash as soon as we know login state — don't block on fonts.
-  // Fonts load in the background; if they hang on some iOS versions the
-  // app would otherwise show a permanent black screen.
   useEffect(() => {
     if (loginDone !== null) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [loginDone]);
+
+  // Failsafe: if AsyncStorage hangs for any reason, force the app open
+  // after 3 seconds rather than sitting on a black splash screen forever.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+      setLoginDone((prev) => (prev === null ? false : prev));
+    }, 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   if (loginDone === null) return null;
 
