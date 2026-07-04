@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "earniq",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -34,7 +34,7 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://earniq.app/"
         }
       ],
       "expo-font",
