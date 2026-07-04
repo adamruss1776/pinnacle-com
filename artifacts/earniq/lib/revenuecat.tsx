@@ -122,6 +122,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const value = useSubscriptionContext();
   const [isDemoMode, setIsDemoMode] = useState(false);
 
+  // Initialize RC inside a useEffect so any native crash here does NOT
+  // kill the process before the React tree has rendered.
+  useEffect(() => {
+    try {
+      initializeRevenueCat();
+    } catch (err: any) {
+      console.warn("[RC] init failed:", err?.message);
+    }
+  }, []);
+
   useEffect(() => {
     AsyncStorage.getItem(DEMO_MODE_KEY).then((val) => {
       setIsDemoMode(val === "1");

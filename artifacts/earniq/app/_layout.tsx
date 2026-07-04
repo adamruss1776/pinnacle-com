@@ -20,15 +20,7 @@ import { Onboarding } from "@/components/Onboarding";
 import { DataProvider } from "@/context/DataContext";
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 import { registerLogoutListener } from "@/lib/logout";
-import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
-
-// Initialize RC at module load — before any component that uses RC renders.
-// Query functions in revenuecat.tsx guard against calling RC before this runs.
-try {
-  initializeRevenueCat();
-} catch (err: any) {
-  console.warn("[RC] init failed:", err?.message);
-}
+import { SubscriptionProvider } from "@/lib/revenuecat";
 
 const queryClient = new QueryClient();
 
