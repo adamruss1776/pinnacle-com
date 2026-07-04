@@ -9,7 +9,7 @@ import {
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,6 +21,14 @@ import { DataProvider } from "@/context/DataContext";
 import { DEMO_MODE_KEY } from "@/lib/demo-mode";
 import { registerLogoutListener } from "@/lib/logout";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
+
+// Initialize RC at module load — before any component that uses RC renders.
+// Query functions in revenuecat.tsx guard against calling RC before this runs.
+try {
+  initializeRevenueCat();
+} catch (err: any) {
+  console.warn("[RC] init failed:", err?.message);
+}
 
 const queryClient = new QueryClient();
 
@@ -79,7 +87,7 @@ function MainAppLayout() {
     });
   }, []);
 
-  if (!onboardingChecked) return null;
+  if (!onboardingChecked) return <View style={{ flex: 1, backgroundColor: "#080808" }} />;
 
   async function handleOnboardingComplete(goToPayPlan: boolean) {
     await AsyncStorage.setItem(ONBOARDING_KEY, "1");
@@ -118,16 +126,6 @@ export default function RootLayout() {
   });
 
   const [loginDone, setLoginDone] = useState<boolean | null>(null);
-
-  // Initialize RevenueCat after first render so a native crash here
-  // doesn't kill the process before the UI tree is mounted.
-  useEffect(() => {
-    try {
-      initializeRevenueCat();
-    } catch (err: any) {
-      Alert.alert("RevenueCat Unavailable", err?.message ?? "Unknown error");
-    }
-  }, []);
 
   useEffect(() => {
     AsyncStorage.getItem(LOGIN_DONE_KEY).then((val) => {

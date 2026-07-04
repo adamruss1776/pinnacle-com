@@ -16,6 +16,9 @@ const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_AP
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";
 
+// Module-level flag so query functions know whether configure() has run.
+let _rcReady = false;
+
 function getRevenueCatApiKey() {
   if (__DEV__ || Platform.OS === "web") {
     return REVENUECAT_TEST_API_KEY;
@@ -33,15 +36,13 @@ function getRevenueCatApiKey() {
 }
 
 export function initializeRevenueCat() {
+  if (_rcReady) return; // already configured
   const apiKey = getRevenueCatApiKey();
-  // Temporary diagnostic — logs presence and length only, never the key value
-  console.log(`[RC] key present=${!!apiKey} len=${apiKey?.length ?? 0} extra=${!!(Constants.expoConfig?.extra?.revenueCatIosApiKey)}`);
   if (!apiKey) throw new Error("RevenueCat Public API Key not found");
 
   Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
   Purchases.configure({ apiKey });
-
-  console.log("RevenueCat configured");
+  _rcReady = true;
 }
 
 function useSubscriptionContext() {
@@ -50,19 +51,31 @@ function useSubscriptionContext() {
   const customerInfoQuery = useQuery({
     queryKey: ["revenuecat", "customer-info"],
     queryFn: async () => {
-      const info = await Purchases.getCustomerInfo();
-      return info;
+      if (!_rcReady) return null;
+      try {
+        const info = await Purchases.getCustomerInfo();
+        return info;
+      } catch {
+        return null;
+      }
     },
     staleTime: 60 * 1000,
+    retry: 2,
   });
 
   const offeringsQuery = useQuery({
     queryKey: ["revenuecat", "offerings"],
     queryFn: async () => {
-      const offerings = await Purchases.getOfferings();
-      return offerings;
+      if (!_rcReady) return null;
+      try {
+        const offerings = await Purchases.getOfferings();
+        return offerings;
+      } catch {
+        return null;
+      }
     },
     staleTime: 300 * 1000,
+    retry: 2,
   });
 
   const purchaseMutation = useMutation({
